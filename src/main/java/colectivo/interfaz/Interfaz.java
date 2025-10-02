@@ -1,5 +1,6 @@
 package colectivo.interfaz;
 
+import java.security.KeyStore.Entry;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ public class Interfaz {
 
 	// Usuario ingresa parada origen
 	public static Parada ingresarParadaOrigen(Map<Integer, Parada> paradas) {
+		// for(Entry<Integer>)
 		return null;
 	}
 

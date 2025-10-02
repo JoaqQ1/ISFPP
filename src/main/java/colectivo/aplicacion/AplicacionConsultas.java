@@ -27,20 +27,19 @@ public class AplicacionConsultas {
 
 		Map<Integer, Parada> paradas = CargarDatos.cargarParadas(CargarParametros.getArchivoParada());
 
-		Map<String, Linea> lineas = CargarDatos.cargarLineas(CargarParametros.getArchivoLinea(),
-				CargarParametros.getArchivoFrecuencia(), paradas);
+		Map<String, Linea> lineas = CargarDatos.cargarLineas(CargarParametros.getArchivoLinea(),CargarParametros.getArchivoFrecuencia(), paradas);
 
 		Map<String, Tramo> tramos = CargarDatos.cargarTramos(CargarParametros.getArchivoTramo(), paradas);
 
 		// Ingreso datos usuario
 
-		Parada paradaOrigen = Interfaz.ingresarParadaOrigen(paradas);
+		Parada paradaOrigen = Interfaz.ingresarParadaOrigen(paradas); 
 		Parada paradaDestino = Interfaz.ingresarParadaDestino(paradas);
 		int diaSemana = Interfaz.ingresarDiaSemana();
 		LocalTime horaLlegaParada = Interfaz.ingresarHoraLlegaParada();
 
 		
-		// Realizar c�lculo
+		// Realizar cálculo
 		List<List<Recorrido>> recorridos = Calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, tramos);
 
 		// Mostrar resultado

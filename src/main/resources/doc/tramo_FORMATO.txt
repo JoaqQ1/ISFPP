@@ -2,7 +2,7 @@ Parada inicio; Parada fin;Tiempo recorrido;Tipo de recorrido;
 
 88;97;60;1;
 
-El tiempo está expresado en segundos
+El tiempo estï¿½ expresado en segundos
 
 Tipo de recorrido:
 
