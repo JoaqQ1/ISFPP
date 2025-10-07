@@ -33,6 +33,17 @@ public class Linea {
 		frecuencias.add(new Frecuencia(diaSemana, hora));
 	}
 
+	public List<LocalTime> getFrecuencias(int dia){
+		List<LocalTime> horarios = new ArrayList<LocalTime>();
+		if(dia > 7 || dia < 0) return horarios;
+		for(Frecuencia f : frecuencias){
+			if(f.getDiaSemana() == dia){
+				horarios.add(f.getHora());
+			}
+		}
+		return horarios;
+	}
+
 	public String getCodigo() {
 		return codigo;
 	}
@@ -52,7 +63,7 @@ public class Linea {
 	public List<Parada> getParadas() {
 		return paradas;
 	}
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

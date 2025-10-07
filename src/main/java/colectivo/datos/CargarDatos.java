@@ -85,7 +85,8 @@ public class CargarDatos {
             int tipo = read.nextInt();
 
             // Se indexa por la dirección de la parada de inicio
-            tramos.put(String.format("%d-%d", inicio.getCodigo(),fin.getCodigo()), new Tramo(inicio, fin, tiempo, tipo));
+            tramos.put(
+                String.format("%d-%d", inicio.getCodigo(),fin.getCodigo()), new Tramo(inicio, fin, tiempo, tipo));
         }
         read.close();
         return tramos;
@@ -98,7 +99,7 @@ public class CargarDatos {
      * <pre>
      * codLinea;nombreLinea;codParada1;codParada2;...;codParadaN
      * </pre>
-     * Además, llama a {@link #agregarFrecuencias(String, Map)} para cargar horarios.
+     * Además, llama a {@link #agregarFrecuencias(String, Map)} para cargar las frecuencia.
      *
      * @param nombreArchivo          archivo con líneas y sus paradas
      * @param nombreArchivoFrecuencia archivo con frecuencias de cada línea
