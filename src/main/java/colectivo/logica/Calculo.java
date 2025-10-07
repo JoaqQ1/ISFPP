@@ -1,6 +1,5 @@
 package colectivo.logica;
 
-import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,7 +10,6 @@ import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
 import colectivo.modelo.Tramo;
-import colectivo.util.Tiempo;
 
 /**
  * Clase Calculo
@@ -93,20 +91,27 @@ public class Calculo {
 
         while (i.hasNext()) {
             Parada actual = i.next();
+
             Tramo t = tramos.get(String.format("%d-%d", anterior.getCodigo(), actual.getCodigo()));
+            if (t == null) {
+                anterior = actual;
+                continue;
+            }
 
-            if (anterior.equals(origen)) enTramo = true;
+            // Activamos el tramo cuando llegamos a la parada de origen
+            if (anterior.equals(origen)) {
+                enTramo = true;
+                paradasRecorridas.add(anterior); // se agrega solo una vez la parada de origen
+            }
 
+            // Si estamos en tramo, acumulamos duración y agregamos las paradas
             if (enTramo) {
                 duracionViaje += t.getTiempo();
-                paradasRecorridas.add(anterior);
                 paradasRecorridas.add(actual);
             }
 
-            if (actual.equals(destino)) {
-                paradasRecorridas.remove(anterior);
-                break;
-            }
+            // Si llegamos al destino, terminamos el recorrido
+            if (actual.equals(destino)) break;
 
             anterior = actual;
         }
