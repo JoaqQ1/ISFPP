@@ -47,6 +47,9 @@ public class Tiempo {
      * @return un {@link LocalTime} que representa la duración total del viaje
      */
     public static LocalTime calcularDuracionTotalViaje(Recorrido r, LocalTime horaLLegadaParada) {
+
+        if(r == null || horaLLegadaParada == null) return null;
+
         // Hora en que llega el colectivo al destino
         LocalTime horaLlegada = r.getHoraSalida().plusSeconds(r.getDuracion());
 
@@ -68,6 +71,9 @@ public class Tiempo {
      * @return un {@link LocalTime} que representa la hora de llegada al destino
      */
     public static LocalTime calcularHoraLlegadaDestino(Recorrido r) {
+        
+        if(r == null) return null;
+
         return r.getHoraSalida().plusSeconds(r.getDuracion());
     }
 }

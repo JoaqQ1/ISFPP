@@ -1,8 +1,10 @@
 package colectivo.interfaz;
 
 import java.time.LocalTime;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
@@ -10,53 +12,142 @@ import colectivo.util.Tiempo;
 
 public class Interfaz {
 
-	// Usuario ingresa parada origen
-	public static Parada ingresarParadaOrigen(Map<Integer, Parada> paradas) {
-		return paradas.get(44);
-	}
+    private static final Scanner sc = new Scanner(System.in);
 
-	// Usuario ingresa parada destino
-	public static Parada ingresarParadaDestino(Map<Integer, Parada> paradas) {
-		return paradas.get(47);
-	}
+    /**
+     * Permite al usuario ingresar el código de la parada de origen.
+     * Valida que la parada exista en el mapa de paradas.
+     * 
+     * @param paradas Mapa de todas las paradas disponibles (código → Parada)
+     * @return La parada seleccionada por el usuario
+     */
+    public static Parada ingresarParadaOrigen(Map<Integer, Parada> paradas) {
+        System.out.println("=== SELECCIÓN DE PARADA ORIGEN ===");
+        mostrarParadasDisponibles(paradas);
 
-	// Usuario ingresa d�a de la semana (1=lunes, 2=martes, ... 7=domingo)
-	public static int ingresarDiaSemana() {
-		return 1;
-	}
+        while (true) {
+            System.out.print("Ingrese el código de la parada de origen: ");
+            int codigo = leerEnteroSeguro();
 
-	// Usuario ingresa hora de llegada a la parada
-	public static LocalTime ingresarHoraLlegaParada() {
-		return LocalTime.of(10, 35);
-	}
+            Parada parada = paradas.get(codigo);
+            if (parada != null) {
+                return parada;
+            } else {
+                System.out.println("❌ No existe una parada con ese código. Intente nuevamente.\n");
+            }
+        }
+    }
 
-	// Mostrar los resultados
-	public static void resultado(List<List<Recorrido>> listaRecorridos, Parada paradaOrigen, Parada paradaDestino,
-			LocalTime horaLlegaParada) {
-				
-		System.out.println("Parada origen: " + paradaOrigen);		
-		System.out.println("Parada destino: " + paradaDestino);
-		System.out.println("Llega a la parada: " + horaLlegaParada);
+    /**
+     * Permite al usuario ingresar el código de la parada destino.
+     * Valida que la parada exista en el mapa de paradas.
+     * 
+     * @param paradas Mapa de todas las paradas disponibles (código → Parada)
+     * @return La parada seleccionada por el usuario
+     */
+    public static Parada ingresarParadaDestino(Map<Integer, Parada> paradas) {
+        System.out.println("=== SELECCIÓN DE PARADA DESTINO ===");
+        mostrarParadasDisponibles(paradas);
 
-		if(listaRecorridos.isEmpty()){
-			System.out.println("No hay recorridos disponibles");
-			return;
-		}
+        while (true) {
+            System.out.print("Ingrese el código de la parada destino: ");
+            int codigo = leerEnteroSeguro();
 
-		System.out.println("============================");
-		for(List<Recorrido> recorridos:listaRecorridos){
-			for(Recorrido r: recorridos){
-				System.out.println("Linea: " + r.getLinea().getNombre());
-				System.out.println("Paradas: " + r.getParadas());
-				System.out.println("Hora de salida: " + r.getHoraSalida());
-				System.out.println("Duración: " + Tiempo.segundosATiempo(r.getDuracion()));
-				System.out.println("============================");
-				System.out.println("Duración total: " + Tiempo.calcularDuracionTotalViaje(r, horaLlegaParada));
-				System.out.println("Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(r));
-				System.out.println("============================");
-			}
-		}		
-		System.out.println();
-	}
+            Parada parada = paradas.get(codigo);
+            if (parada != null) {
+                return parada;
+            } else {
+                System.out.println("❌ No existe una parada con ese código. Intente nuevamente.\n");
+            }
+        }
+    }
 
+    /**
+     * Permite al usuario ingresar el día de la semana (1 = Lunes ... 7 = Domingo)
+     * 
+     * @return Número correspondiente al día de la semana.
+     */
+    public static int ingresarDiaSemana() {
+        System.out.println("=== INGRESO DE DÍA DE LA SEMANA ===");
+        System.out.print("Ingrese el día de la semana (1 = Lunes ... 7 = Domingo): ");
+
+        int dia = leerEnteroSeguro();
+        while (dia < 1 || dia > 7) {
+            System.out.print("Valor inválido. Ingrese un número entre 1 y 7: ");
+            dia = leerEnteroSeguro();
+        }
+        return dia;
+    }
+
+    /**
+     * Permite al usuario ingresar la hora en que llega a la parada (HH:mm)
+     * 
+     * @return Hora de llegada como LocalTime.
+     */
+    public static LocalTime ingresarHoraLlegaParada() {
+        System.out.println("=== INGRESO DE HORA ===");
+        System.out.print("Ingrese la hora de llegada a la parada (formato HH:mm): ");
+
+        while (true) {
+            try {
+                String input = sc.next();
+                return LocalTime.parse(input);
+            } catch (Exception e) {
+                System.out.print("Formato inválido. Intente nuevamente (ejemplo 10:35): ");
+            }
+        }
+    }
+
+    /**
+     * Muestra los resultados de los recorridos calculados.
+     */
+    public static void resultado(List<List<Recorrido>> listaRecorridos,
+								Parada paradaOrigen,
+								Parada paradaDestino,
+								LocalTime horaLlegaParada) {
+
+        System.out.println("\n==============================");
+        System.out.println("Parada origen: " + paradaOrigen);
+        System.out.println("Parada destino: " + paradaDestino);
+        System.out.println("Hora llegada pasajero: " + horaLlegaParada);
+        System.out.println("==============================");
+
+        if (listaRecorridos.isEmpty()) {
+            System.out.println("No hay recorridos disponibles");
+            return;
+        }
+
+        for (List<Recorrido> recorridos : listaRecorridos) {
+            for (Recorrido r : recorridos) {
+                System.out.println("Línea: " + r.getLinea().getNombre());
+                System.out.println("Paradas: " + r.getParadas());
+                System.out.println("Hora de salida: " + r.getHoraSalida());
+                System.out.println("Duración: " + Tiempo.segundosATiempo(r.getDuracion()));
+                System.out.println("Duración total: " + Tiempo.calcularDuracionTotalViaje(r, horaLlegaParada));
+                System.out.println("Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(r));
+                System.out.println("==============================");
+            }
+        }
+    }
+
+    // Muestra todas las paradas disponibles
+    private static void mostrarParadasDisponibles(Map<Integer, Parada> paradas) {
+        System.out.println("Paradas disponibles:");
+        for (Parada p : paradas.values()) {
+            System.out.println("Código: " + p.getCodigo() + " → " + p.getDireccion());
+        }
+        System.out.println();
+    }
+
+    // Lee un entero de forma segura
+    private static int leerEnteroSeguro() {
+        while (true) {
+            try {
+                return sc.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.print("Entrada inválida. Ingrese un número entero: ");
+                sc.nextLine();
+            }
+        }
+    }
 }
