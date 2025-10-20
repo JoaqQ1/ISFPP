@@ -2,14 +2,19 @@ package colectivo.logica;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
 import colectivo.modelo.Tramo;
+
+
 
 /**
  * Clase Calculo
@@ -38,15 +43,16 @@ public class Calculo {
             LocalTime horaLlegaParada,
             Map<String, Tramo> tramos) {
 
+        // ? ========== Recorridos Directos ==========√ 
         List<List<Recorrido>> listaRecorridos = new ArrayList<>();
 
         // Iteramos sobre las líneas que pasan por la parada de origen
-        for (Linea linea : paradaOrigen.getLineas()) {
+        for (Linea l1 : paradaOrigen.getLineas()) {
 
             // Si la línea también pasa por la parada destino, se calcula el recorrido
-            if (linea.getParadas().contains(paradaDestino)) {
+            if (l1.getParadas().contains(paradaDestino)) {
 
-                Recorrido recorrido = crearRecorrido(linea, paradaOrigen, paradaDestino, tramos, diaSemana, horaLlegaParada);
+                Recorrido recorrido = crearRecorrido(l1, paradaOrigen, paradaDestino, tramos, diaSemana, horaLlegaParada);
 
                 // Solo se agrega si el recorrido es válido
                 if (recorrido != null) {
@@ -55,8 +61,27 @@ public class Calculo {
                     listaRecorridos.add(recorridos);
                 }
             }
-        }
 
+        }
+        //! ========== Recorridos con Conexiones ==========
+
+        // List<Linea> lineas = obtenerTodasLasLineas(tramos);
+        // HashSet<Linea> lineasDestino = new HashSet<Linea>();
+        // System.out.println(lineas);
+        // for(Linea l: lineas){
+        //     for(Parada p:l.getParadas()){
+        //         if(p.equals(paradaDestino)){
+        //             lineasDestino.add(l);
+        //         }
+        //     }
+        // }
+        // System.out.println(lineasDestino);
+        // List<Parada> paradas = obtenerTodasLasParadas(tramos);
+        // Map<Parada,List<Tramo>> redDeTramos = crearRedTramos(paradas,tramos);
+        // List<Tramo> caminos = new ArrayList<>();
+        // int cantidaCombinaciones = 0;
+        // caminos=buscarRecorridos( paradaOrigen, paradaDestino, redDeTramos, new LinkedList<>(), new HashSet<>());
+        // System.out.println(caminos);
         return listaRecorridos;
     }
 
@@ -92,12 +117,7 @@ public class Calculo {
         while (i.hasNext()) {
             Parada actual = i.next();
 
-            Tramo t = tramos.get(String.format("%d-%d", anterior.getCodigo(), actual.getCodigo()));
-            if (t == null) {
-                anterior = actual;
-                continue;
-            }
-
+            Tramo t = tramos.get(claveTramo(anterior, actual));
             // Activamos el tramo cuando llegamos a la parada de origen
             if (anterior.equals(origen)) {
                 enTramo = true;
@@ -112,7 +132,7 @@ public class Calculo {
 
             // Si llegamos al destino, terminamos el recorrido
             if (actual.equals(destino)) break;
-
+            
             anterior = actual;
         }
 
@@ -121,7 +141,9 @@ public class Calculo {
 
         // Calcular hora de salida según la frecuencia más próxima
 		LocalTime horaSalida = calcularHoraSalida(linea, origen, tramos, diaSemana, horaLlegadaParada);
-	
+        
+        // No hay frecuencias para el horario de llegada
+        if(horaSalida == null) return null;
 
         // Crear objeto Recorrido con todos los datos calculados
         return new Recorrido(linea, paradasRecorridas, horaSalida, duracionViaje);
@@ -133,12 +155,12 @@ public class Calculo {
      */
     private static LocalTime calcularHoraSalida(
             Linea linea,
-            Parada paradaOrigen,
+            Parada origen,
             Map<String, Tramo> tramos,
             int diaSemana,
             LocalTime horaLlegaParada) {
 
-        int tiempoDesdeInicio = calcularTiempoDesdeInicio(linea, paradaOrigen, tramos);
+        int tiempoDesdeInicio = calcularTiempoDesdeInicio( origen, linea, tramos );
 
         // Recorremos los horarios de salida de la línea para ese día
         for (LocalTime horario : linea.getFrecuencias(diaSemana)) {
@@ -148,38 +170,120 @@ public class Calculo {
             }
         }
 
-        // Si no hay frecuencias posteriores, devolvemos null (o podrías manejarlo distinto)
+        // Si no hay frecuencias posteriores, devolvemos null
         return null;
     }
     /**
      * Calcula el tiempo total en segundos desde el inicio de la línea hasta la parada de origen.
      * Se utiliza para determinar la hora en la que un colectivo pasa por dicha parada.
      *
+     * @param origen  Parada desde donde se inicia el cálculo
      * @param linea         Línea a evaluar
-     * @param paradaOrigen  Parada desde donde se inicia el cálculo
      * @param tramos        Mapa de tramos (clave: "codigoOrigen-codigoDestino")
      * @return Tiempo acumulado en segundos hasta la parada de origen
      */
-    private static int calcularTiempoDesdeInicio(Linea linea, Parada paradaOrigen, Map<String, Tramo> tramos) {
+    private static int calcularTiempoDesdeInicio(
+        Parada origen,
+        Linea linea,
+        Map<String, Tramo> tramos) {
         List<Parada> paradas = linea.getParadas();
         int tiempoAcumulado = 0;
 
         for (int i = 0; i < paradas.size() - 1; i++) {
             Parada actual = paradas.get(i);
             Parada siguiente = paradas.get(i + 1);
-
-            Tramo tramo = tramos.get(String.format("%d-%d", actual.getCodigo(), siguiente.getCodigo()));
-            if (tramo == null) continue;
-
-            if (siguiente.equals(paradaOrigen)) {
-                tiempoAcumulado += tramo.getTiempo();
-                break; // Llegamos a la parada de origen
-            }
-
-            tiempoAcumulado += tramo.getTiempo();
+            
+            tiempoAcumulado += tramos.get(claveTramo(actual, siguiente)).getTiempo();
+            
+            if (siguiente.equals(origen)) break;
         }
 
         return tiempoAcumulado;
     }
+
+    /**
+     * Devuelve un String pre-formateado como la key del mapa de tramos 
+     * @param origen Origen del tramo a buscar
+     * @param destino Destino del tramo a buscar
+     * @return  Retorna un String pre-formateado con los codigos de origen y destino de la siguiente manera. "codigo_origen-codigo_destino"
+     */
+    private static String claveTramo(Parada origen,Parada destino){
+        return String.format("%d-%d",origen.getCodigo(),destino.getCodigo());
+    }
+    
+    
+    private static List<Parada> obtenerTodasLasParadas(Map<String, Tramo> tramos) {
+        // Usamos Set para evitar duplicados
+        Set<Parada> paradas = new HashSet<>();
+        for (Tramo t : tramos.values()) {
+            paradas.add(t.getInicio());
+            paradas.add(t.getFin());
+        }
+        return new ArrayList<>(paradas);
+    }
+
+    private static List<Linea> obtenerTodasLasLineas(Map<String, Tramo> tramos) {
+
+        // Usamos Set para evitar duplicados
+        Set<Linea> lineas = new HashSet<>();
+        
+        for(Parada p: obtenerTodasLasParadas(tramos)){
+            for(Linea l:p.getLineas()){
+                lineas.add(l);
+            }
+        }
+        return new ArrayList<Linea>(lineas);
+    }
+    // private static Map<Parada, List<Tramo>> crearRedTramos(List<Parada> paradas, Map<String, Tramo> tramos) {
+    //     Map<Parada, List<Tramo>> redDeTransporte = new HashMap<>();
+
+    //     // Inicializamos la red
+    //     for (Parada p : paradas) {
+    //         redDeTransporte.put(p, new ArrayList<>());
+    //     }
+
+    //     // Conectamos cada tramo
+    //     for (Tramo t : tramos.values()) {
+    //         Parada inicio = t.getInicio();
+    //         redDeTransporte.get(inicio).add(t);
+    //     }
+
+    //     return redDeTransporte;
+    // }
+
+    // private static List<Tramo> buscarRecorridos(
+    //         Parada actual,
+    //         Parada destino,
+    //         Map<Parada,List<Tramo>> redDeTramos,
+    //         Deque<Tramo> caminoActual,
+    //         Set<Parada> visitadas) {
+
+    //     if (actual.equals(destino)) {
+    //         return new ArrayList<>(caminoActual); // copia defensiva
+    //     }
+
+    //     // Protecciones
+    //     if (visitadas.contains(actual)) return null;
+    //     visitadas.add(actual);
+
+    //     List<Tramo> salidas = redDeTramos.get(actual);
+    //     if (salidas != null) {
+    //         for (Tramo tramo : salidas) {
+    //             Parada siguiente = tramo.getFin();
+    //             // evitar volver a entrar si ya visitada
+    //             if (visitadas.contains(siguiente)) continue;
+
+    //             caminoActual.addLast(tramo);
+    //             List<Tramo> resultado = buscarRecorridos(siguiente, destino, redDeTramos, caminoActual, visitadas);
+    //             if (resultado != null) {
+    //                 return resultado; // corta y devuelve la primera ruta encontrada
+    //             }
+    //             caminoActual.removeLast(); // backtracking
+    //         }
+    //     }
+
+    //     visitadas.remove(actual);
+    //     return null;
+    // }
 
 }
