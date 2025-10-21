@@ -22,7 +22,7 @@ public class Interfaz {
      * @return La parada seleccionada por el usuario
      */
     public static Parada ingresarParadaOrigen(Map<Integer, Parada> paradas) {
-        System.out.println("=== SELECCIÓN DE PARADA ORIGEN ===");
+        /*System.out.println("=== SELECCIÓN DE PARADA ORIGEN ===");
         mostrarParadasDisponibles(paradas);
 
         while (true) {
@@ -35,7 +35,8 @@ public class Interfaz {
             } else {
                 System.out.println("❌ No existe una parada con ese código. Intente nuevamente.\n");
             }
-        }
+        }*/
+    	return(paradas.get(88));
     }
 
     /**
@@ -46,20 +47,21 @@ public class Interfaz {
      * @return La parada seleccionada por el usuario
      */
     public static Parada ingresarParadaDestino(Map<Integer, Parada> paradas) {
-        System.out.println("=== SELECCIÓN DE PARADA DESTINO ===");
-        mostrarParadasDisponibles(paradas);
-
-        while (true) {
-            System.out.print("Ingrese el código de la parada destino: ");
-            int codigo = leerEnteroSeguro();
-
-            Parada parada = paradas.get(codigo);
-            if (parada != null) {
-                return parada;
-            } else {
-                System.out.println("❌ No existe una parada con ese código. Intente nuevamente.\n");
-            }
-        }
+//        System.out.println("=== SELECCIÓN DE PARADA DESTINO ===");
+//        mostrarParadasDisponibles(paradas);
+//
+//        while (true) {
+//            System.out.print("Ingrese el código de la parada destino: ");
+//            int codigo = leerEnteroSeguro();
+//
+//            Parada parada = paradas.get(codigo);
+//            if (parada != null) {
+//                return parada;
+//            } else {
+//                System.out.println("❌ No existe una parada con ese código. Intente nuevamente.\n");
+//            }
+//        }
+    	return(paradas.get(13));
     }
 
     /**
@@ -68,15 +70,16 @@ public class Interfaz {
      * @return Número correspondiente al día de la semana.
      */
     public static int ingresarDiaSemana() {
-        System.out.println("=== INGRESO DE DÍA DE LA SEMANA ===");
-        System.out.print("Ingrese el día de la semana (1 = Lunes ... 7 = Domingo): ");
-
-        int dia = leerEnteroSeguro();
-        while (dia < 1 || dia > 7) {
-            System.out.print("Valor inválido. Ingrese un número entre 1 y 7: ");
-            dia = leerEnteroSeguro();
-        }
-        return dia;
+//        System.out.println("=== INGRESO DE DÍA DE LA SEMANA ===");
+//        System.out.print("Ingrese el día de la semana (1 = Lunes ... 7 = Domingo): ");
+//
+//        int dia = leerEnteroSeguro();
+//        while (dia < 1 || dia > 7) {
+//            System.out.print("Valor inválido. Ingrese un número entre 1 y 7: ");
+//            dia = leerEnteroSeguro();
+//        }
+//        return dia;
+    	return 1;
     }
 
     /**
@@ -85,17 +88,18 @@ public class Interfaz {
      * @return Hora de llegada como LocalTime.
      */
     public static LocalTime ingresarHoraLlegaParada() {
-        System.out.println("=== INGRESO DE HORA ===");
-        System.out.print("Ingrese la hora de llegada a la parada (formato HH:mm): ");
-
-        while (true) {
-            try {
-                String input = sc.next();
-                return LocalTime.parse(input);
-            } catch (Exception e) {
-                System.out.print("Formato inválido. Intente nuevamente (ejemplo 10:35): ");
-            }
-        }
+//        System.out.println("=== INGRESO DE HORA ===");
+//        System.out.print("Ingrese la hora de llegada a la parada (formato HH:mm): ");
+//
+//        while (true) {
+//            try {
+//                String input = sc.next();
+//                return LocalTime.parse(input);
+//            } catch (Exception e) {
+//                System.out.print("Formato inválido. Intente nuevamente (ejemplo 10:35): ");
+//            }
+//        }
+    	return LocalTime.of(10, 35);
     }
 
     /**
@@ -121,13 +125,20 @@ public class Interfaz {
             for (Recorrido r : recorridos) {
                 System.out.println("Línea: " + r.getLinea().getNombre());
                 System.out.println("Paradas: " + r.getParadas());
-                System.out.println("Hora de salida: " + r.getHoraSalida());
+                System.out.println("Hora de salida: " + r.getHoraSalidaColectivo());
+                System.out.println("Hora de llegada colectivo: " + r.getHoraSalida());
                 System.out.println("Duración: " + Tiempo.segundosATiempo(r.getDuracion()));
-                System.out.println("Duración total: " + Tiempo.calcularDuracionTotalViaje(r, horaLlegaParada));
-                System.out.println("Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(r));
                 System.out.println("==============================");
+                if (recorridos.getLast().equals(r)) {
+                	System.out.println("Duración total: " + Tiempo.calcularDuracionTotalViaje(r, horaLlegaParada));
+                    System.out.println("Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(r));
+                    System.out.println("==============================");
+				}
             }
+            System.out.println("\n");
         }
+        
+        
     }
 
     // Muestra todas las paradas disponibles
