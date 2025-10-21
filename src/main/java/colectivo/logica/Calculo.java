@@ -64,25 +64,52 @@ public class Calculo {
 
         }
         //! ========== Recorridos con Conexiones ==========
-
-        // List<Linea> lineas = obtenerTodasLasLineas(tramos);
-        // HashSet<Linea> lineasDestino = new HashSet<Linea>();
-        // System.out.println(lineas);
-        // for(Linea l: lineas){
-        //     for(Parada p:l.getParadas()){
-        //         if(p.equals(paradaDestino)){
-        //             lineasDestino.add(l);
-        //         }
-        //     }
-        // }
-        // System.out.println(lineasDestino);
-        // List<Parada> paradas = obtenerTodasLasParadas(tramos);
-        // Map<Parada,List<Tramo>> redDeTramos = crearRedTramos(paradas,tramos);
-        // List<Tramo> caminos = new ArrayList<>();
-        // int cantidaCombinaciones = 0;
-        // caminos=buscarRecorridos( paradaOrigen, paradaDestino, redDeTramos, new LinkedList<>(), new HashSet<>());
-        // System.out.println(caminos);
+        buscarConexiones(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, tramos, listaRecorridos);
         return listaRecorridos;
+    }
+
+    private static void buscarConexiones(
+            Parada origen,
+            Parada destino,
+            int diaSemana,
+            LocalTime horaLlegada,
+            Map<String, Tramo> tramos,
+            List<List<Recorrido>> resultados) {
+
+        for (Linea l1 : origen.getLineas()) {
+
+            // Recorremos cada parada de la primera línea como posible punto de transbordo
+            for (Parada intermedia : l1.getParadas()) {
+                if (!intermedia.equals(origen)){
+
+                    Recorrido r1 = crearRecorrido(l1, origen, intermedia, tramos, diaSemana, horaLlegada);
+                    // if (r1 == null) continue;
+    
+                    // Ahora buscamos una segunda línea que pase por la parada intermedia y llegue al destino
+                    for (Linea l2 : intermedia.getLineas()) {
+                        if (l2.equals(l1)) continue; // No repetir misma línea
+                        if (!l2.getParadas().contains(destino)) continue;
+    
+                        int indexIntermedia = l2.getParadas().indexOf(intermedia);
+                        int indexDestino = l2.getParadas().indexOf(destino);
+                        if (indexIntermedia == -1 || indexDestino == -1 || indexIntermedia >= indexDestino) continue;
+    
+                        // La segunda parte del viaje parte después de llegar a la parada intermedia
+                        LocalTime horaInicioSegundaParte = r1.getHoraSalida();
+                        Recorrido r2 = crearRecorrido(l2, intermedia, destino, tramos, diaSemana, horaInicioSegundaParte);
+    
+                        if (r2 != null) {
+                            List<Recorrido> combinacion = new ArrayList<>();
+                            combinacion.add(r1);
+                            combinacion.add(r2);
+                            resultados.add(combinacion);
+                            break;
+                        }
+                    }
+                }
+
+            }
+        }
     }
 
     /**
@@ -161,7 +188,6 @@ public class Calculo {
             LocalTime horaLlegaParada) {
 
         int tiempoDesdeInicio = calcularTiempoDesdeInicio( origen, linea, tramos );
-
         // Recorremos los horarios de salida de la línea para ese día
         for (LocalTime horario : linea.getFrecuencias(diaSemana)) {
             LocalTime horaPasoPorOrigen = horario.plusSeconds(tiempoDesdeInicio);
@@ -183,7 +209,7 @@ public class Calculo {
      * @return Tiempo acumulado en segundos hasta la parada de origen
      */
     private static int calcularTiempoDesdeInicio(
-        Parada origen,
+        Parada destino,
         Linea linea,
         Map<String, Tramo> tramos) {
         List<Parada> paradas = linea.getParadas();
@@ -193,9 +219,13 @@ public class Calculo {
             Parada actual = paradas.get(i);
             Parada siguiente = paradas.get(i + 1);
             
+            // Si la parada actual es igual a la de destino no se debe acumular ningun segundo
+            if (actual.equals(destino)) break;
+
             tiempoAcumulado += tramos.get(claveTramo(actual, siguiente)).getTiempo();
             
-            if (siguiente.equals(origen)) break;
+            // Si la parada siguiente es igual a la de destino, no se debe acumular mas segundos
+            if(siguiente.equals(destino)) break;
         }
 
         return tiempoAcumulado;
