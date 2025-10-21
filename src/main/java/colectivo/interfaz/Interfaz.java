@@ -129,12 +129,11 @@ public class Interfaz {
                 System.out.println("Hora de llegada colectivo: " + r.getHoraSalida());
                 System.out.println("Duración: " + Tiempo.segundosATiempo(r.getDuracion()));
                 System.out.println("==============================");
-                if (recorridos.getLast().equals(r)) {
-                	System.out.println("Duración total: " + Tiempo.calcularDuracionTotalViaje(r, horaLlegaParada));
-                    System.out.println("Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(r));
-                    System.out.println("==============================");
-				}
+            	
             }
+            System.out.println("Duración total: " + Tiempo.calcularDuracionTotalViaje(recorridos.getLast(), horaLlegaParada));
+            System.out.println("Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(recorridos.getLast()));
+            System.out.println("==============================");
             System.out.println("\n");
         }
         
