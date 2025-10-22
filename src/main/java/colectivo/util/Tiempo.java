@@ -70,10 +70,11 @@ public class Tiempo {
      * @param r el {@link Recorrido} del cual se obtiene la hora de salida y la duración en segundos
      * @return un {@link LocalTime} que representa la hora de llegada al destino
      */
-    public static LocalTime calcularHoraLlegadaDestino(Recorrido r) {
-        
-        if(r == null) return null;
+    // public static LocalTime calcularHoraLlegadaDestino(Recorrido r)
+    // if(r == null) return null;
 
+    // return r.getHoraSalida().plusSeconds(r.getDuracion());
+    public static LocalTime calcularHoraLlegadaDestino(Recorrido r) {
         return r.getHoraSalida().plusSeconds(r.getDuracion());
     }
 }

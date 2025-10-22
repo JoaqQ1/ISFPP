@@ -1,6 +1,6 @@
 package colectivo.modelo;
 
-import colectivo.aplicacion.Constantes;
+import colectivo.controlador.Constantes;
 
 public class Tramo {
 

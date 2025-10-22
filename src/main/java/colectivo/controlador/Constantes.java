@@ -1,4 +1,4 @@
-package colectivo.aplicacion;
+package colectivo.controlador;
 
 public class Constantes {
 

@@ -1,11 +1,10 @@
 package colectivo.test;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,17 +13,17 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import colectivo.datos.CargarDatos;
-import colectivo.datos.CargarParametros;
-import colectivo.logica.Calculo;
+import colectivo.conexion.Factory;
+import colectivo.dao.LineaDAO;
+import colectivo.dao.ParadaDAO;
+import colectivo.dao.TramoDAO;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
 import colectivo.modelo.Tramo;
+import colectivo.negocio.Calculo;
 
-
-
-class TestcalcularRecorrido {
+class TestCalcularRecorridoDAO {
 
 	private Map<Integer, Parada> paradas;
 	private Map<String, Linea> lineas;
@@ -32,27 +31,22 @@ class TestcalcularRecorrido {
 
 	private int diaSemana;
 	private LocalTime horaLlegaParada;
+	
+	private Calculo calculo;	
 
 	@BeforeEach
 	void setUp() throws Exception {
 
-		try {
-			CargarParametros.parametros(); // Carga los parametros de texto
-		} catch (IOException e) {
-			System.err.print("Error al cargar parametros");
-			System.exit(-1);
-		}
+		paradas = ((ParadaDAO) Factory.getInstancia("PARADA")).buscarTodos();
 
-		paradas = CargarDatos.cargarParadas(CargarParametros.getArchivoParada());
-
-		lineas = CargarDatos.cargarLineas(CargarParametros.getArchivoLinea(), CargarParametros.getArchivoFrecuencia(),
-				paradas);
-
-		tramos = CargarDatos.cargarTramos(CargarParametros.getArchivoTramo(), paradas);
+		tramos = ((TramoDAO) Factory.getInstancia("TRAMO")).buscarTodos();
+		
+		lineas = ((LineaDAO) Factory.getInstancia("LINEA")).buscarTodos();
 
 		diaSemana = 1; // lunes
-		horaLlegaParada = LocalTime.of(10, 35); // hora de llegada a la parada
+		horaLlegaParada = LocalTime.of(10, 35);
 
+		calculo = new Calculo();
 	}
 
 	@Test
@@ -60,7 +54,7 @@ class TestcalcularRecorrido {
 		Parada paradaOrigen = paradas.get(66);
 		Parada paradaDestino = paradas.get(31);
 
-		List<List<Recorrido>> recorridos = Calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
+		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
 				horaLlegaParada, tramos);
 
 		assertTrue(recorridos.isEmpty());
@@ -71,9 +65,8 @@ class TestcalcularRecorrido {
 		Parada paradaOrigen = paradas.get(44);
 		Parada paradaDestino = paradas.get(47);
 
-		List<List<Recorrido>> recorridos = Calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
+		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
 				horaLlegaParada, tramos);
-
 		assertEquals(2, recorridos.size());
 		assertEquals(1, recorridos.get(0).size());
 		assertEquals(1, recorridos.get(1).size());
@@ -115,7 +108,7 @@ class TestcalcularRecorrido {
 		Parada paradaOrigen = paradas.get(88);
 		Parada paradaDestino = paradas.get(13);
 
-		List<List<Recorrido>> recorridos = Calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
+		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
 				horaLlegaParada, tramos);
 
 		assertEquals(2, recorridos.size());
@@ -201,7 +194,7 @@ class TestcalcularRecorrido {
 		Parada paradaOrigen = paradas.get(31);
 		Parada paradaDestino = paradas.get(66);
 
-		List<List<Recorrido>> recorridos = Calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
+		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
 				horaLlegaParada, tramos);
 		
 		assertEquals(1, recorridos.size());
