@@ -2,6 +2,8 @@ package colectivo.negocio;
 
 import java.util.Map;
 
+import colectivo.controlador.Coordinador;
+import colectivo.coordinador.Coordinable;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Tramo;
@@ -17,7 +19,7 @@ import colectivo.servicio.TramoServiceImpl;
  * Implementa el patrón Singleton para garantizar una única instancia
  * y centralizar el acceso a las colecciones de líneas, paradas y tramos.
  */
-public class SistemaColectivo {
+public class SistemaColectivo implements Coordinable{
 
     /** Instancia única del sistema (Singleton). */
     private static SistemaColectivo instancia = null;
@@ -31,6 +33,8 @@ public class SistemaColectivo {
     private Map<String, Linea> lineas;
     private Map<Integer, Parada> paradas;
     private Map<String, Tramo> tramos;
+
+    private Coordinador coordinador;
 
     /**
      * Constructor privado que inicializa los servicios y carga los datos.
@@ -84,5 +88,9 @@ public class SistemaColectivo {
      */
     public Map<String, Tramo> getTramos() {
         return tramos;
+    }
+
+    public void setCoordinador(Coordinador coordinador){
+        this.coordinador = coordinador;
     }
 }

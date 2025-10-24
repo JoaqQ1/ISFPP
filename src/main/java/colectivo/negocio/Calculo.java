@@ -73,6 +73,16 @@ public class Calculo {
         return listaRecorridos;
     }
 
+    // ==============================
+    // BÚSQUEDA DE CONEXIONES
+    // ==============================
+
+    /**
+     * Busca recorridos con una conexión intermedia entre líneas distintas.
+     * 
+     * Ejemplo: Línea A lleva de origen a parada intermedia, y Línea B conecta desde esa
+     * parada intermedia hasta el destino.
+     */
     private void buscarConexiones(
         Parada origen,
         Parada destino,
@@ -81,57 +91,58 @@ public class Calculo {
         Map<String, Tramo> tramos,
         List<List<Recorrido>> resultados) {
 
-        boolean recorridoEncontrado = false;
-        for (Linea l1 : origen.getLineas()) {
-            List<Parada> paradasL1 = l1.getParadas();
-            int idxOrigenEnL1 = paradasL1.indexOf(origen);
-            // Recorremos cada parada de la primera línea como posible punto de transbordo
-            for (Parada intermedia : paradasL1) {
-                int idxIntermediaEnL1 = paradasL1.indexOf(intermedia);
+         for (Linea primeraLinea : origen.getLineas()) {
+            int indexOrigen = primeraLinea.getParadas().indexOf(origen);
+            List<Parada> paradasLinea1 = primeraLinea.getParadas().subList(indexOrigen + 1, primeraLinea.getParadas().size());
 
-                // la intermedia debe venir después del origen
-                if (idxIntermediaEnL1 > idxOrigenEnL1) {
+            // Cada parada posterior al origen es candidata a ser punto de transbordo
+            for (Parada paradaConexion : paradasLinea1) {
+                boolean yaUsada = false;
 
-                    // Buscamos una segunda línea que pase por la parada intermedia y llegue al destino
-                    for (Linea l2 : intermedia.getLineas()) {
-                        List<Parada> paradasL2 = l2.getParadas();
-                        int idxIntermediaEnL2 = paradasL2.indexOf(intermedia);
-                        int idxDestinoEnL2 = paradasL2.indexOf(destino);
+                // Primer tramo del viaje (origen → conexión)
+                Recorrido recorrido1 = crearRecorrido(primeraLinea, origen, paradaConexion, tramos, diaSemana, horaLlegada);
 
-                        // Debe tener ambas paradas y el destino debe venir después de la intermedia
-                        if (idxDestinoEnL2 > idxIntermediaEnL2) {
+                // Buscamos una segunda línea que conecte la parada intermedia con el destino
+                for (Linea segundaLinea : paradaConexion.getLineas()) {
+                    if (!segundaLinea.equals(primeraLinea)) {
+                        if (segundaLinea.getParadas().contains(destino)) {
+                            int indexIntermedia = segundaLinea.getParadas().indexOf(paradaConexion);
+                            int indexDestino = segundaLinea.getParadas().indexOf(destino);
 
-                            // Crear primer recorrido (origen -> intermedia)
-                            Recorrido r1 = crearRecorrido(l1, origen, intermedia, tramos, diaSemana, horaLlegada);
+                            // Verifica que el destino esté después de la parada de conexión
+                            if (indexIntermedia < indexDestino) {
+                                // El segundo tramo comienza al llegar al punto de conexión
+                                LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
+                                Recorrido recorrido2 = crearRecorrido(
+                                        segundaLinea,
+                                        paradaConexion,
+                                        destino,
+                                        tramos,
+                                        diaSemana,
+                                        horaInicioSegundaParte);
 
-                            if (r1 != null) {
-                                // Calcular hora en la que se llega a la intermedia
-                                LocalTime llegadaIntermedia = r1.getHoraSalida().plusSeconds(r1.getDuracion());
-
-                                // Crear segundo recorrido (intermedia -> destino)
-                                Recorrido r2 = crearRecorrido(l2, intermedia, destino, tramos, diaSemana, llegadaIntermedia);
-
-                                if (r2 != null) {
+                                if (recorrido2 != null) {
                                     List<Recorrido> combinacion = new ArrayList<>();
-                                    combinacion.add(r1);
-                                    combinacion.add(r2);
+                                    combinacion.add(recorrido1);
+                                    combinacion.add(recorrido2);
                                     resultados.add(combinacion);
-                                    recorridoEncontrado = true;
+                                    yaUsada = true;
+                                    break;
                                 }
                             }
                         }
                     }
                 }
-                if(recorridoEncontrado){
-                    recorridoEncontrado = false;
-                    break;
-                }
+                if (yaUsada) break;
             }
-            
         }
     }
 
 
+    // ==============================
+    // CREACIÓN DE UN RECORRIDO
+    // ==============================
+    
     /**
      * Crea un recorrido entre una parada origen y una destino dentro de una línea,
      * considerando los tramos, las frecuencias y la hora de llegada del pasajero.
@@ -189,7 +200,7 @@ public class Calculo {
         if (paradasRecorridas.isEmpty()) return null;
 
         // Calcular hora de salida según la frecuencia más próxima
-		LocalTime horaSalida = calcularHoraSalida(linea, origen, tramos, diaSemana, horaLlegadaParada);
+		LocalTime horaSalida = obtenerProximaHoraDePaso(linea, origen, tramos, diaSemana, horaLlegadaParada);
         
         // No hay frecuencias para el horario de llegada
         if(horaSalida == null) return null;
@@ -199,10 +210,20 @@ public class Calculo {
     }
 
 	/**
-     * Calcula la hora de salida más próxima que permite llegar a la parada de origen
-     * en o después de la hora de llegada del pasajero.
+     * Obtiene la próxima hora en la que la línea pasa por una parada de origen,
+     * considerando las frecuencias de salida desde el inicio de línea y el tiempo
+     * de recorrido hasta dicha parada. Solo se devuelve una hora igual o posterior
+     * a la hora en que el pasajero llega a la parada.
+     *
+     * @param linea            Línea a evaluar
+     * @param origen           Parada en la que se encuentra el pasajero
+     * @param tramos           Mapa de tramos (clave: "codigoOrigen-codigoDestino")
+     * @param diaSemana        Día de la semana (para obtener las frecuencias correspondientes)
+     * @param horaLlegaParada  Hora en que el pasajero llega a la parada
+     * @return La próxima hora en que la línea pasa por la parada de origen,
+     *         o {@code null} si no hay frecuencias disponibles después de la hora indicada
      */
-    private LocalTime calcularHoraSalida(
+    private LocalTime obtenerProximaHoraDePaso(
             Linea linea,
             Parada origen,
             Map<String, Tramo> tramos,

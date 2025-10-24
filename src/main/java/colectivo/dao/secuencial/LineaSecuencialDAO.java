@@ -11,6 +11,8 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import colectivo.conexion.Factory;
+import colectivo.controlador.Constantes;
 import colectivo.dao.LineaDAO;
 import colectivo.dao.ParadaDAO;
 import colectivo.modelo.Linea;
@@ -19,17 +21,15 @@ import colectivo.modelo.Parada;
 public class LineaSecuencialDAO implements LineaDAO {
 
     private Map<String, Linea> lineas;
-    private ParadaDAO paradasDAO;
     private String archivoLineas;
     private String archivoFrecuencias;
     private boolean actualizar;
-
+    
     public LineaSecuencialDAO() {
         // Leemos los nombres de archivos desde secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle("secuencial");
         archivoLineas = rb.getString("linea");
         archivoFrecuencias = rb.getString("frecuencia");
-        paradasDAO = new ParadaSecuencialDAO();
     }
 
     @Override
@@ -75,7 +75,7 @@ public class LineaSecuencialDAO implements LineaDAO {
     private Map<String, Linea> readFromFile(String archivoLineas, String archivoFrecuencias) {
         Map<String, Linea> map = new TreeMap<>();
         Scanner inFile = null;
-        Map<Integer,Parada> paradas = paradasDAO.buscarTodos();
+        Map<Integer,Parada> paradas = ((ParadaDAO) Factory.getInstancia(Constantes.PARADA)).buscarTodos();
         try {
             inFile = new Scanner(new File("src/main/resources/" + archivoLineas));
 

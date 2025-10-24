@@ -1,13 +1,16 @@
 package colectivo.controlador;
 
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
-import colectivo.interfaz.Interfaz;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
+import colectivo.modelo.Recorrido;
 import colectivo.modelo.Tramo;
 import colectivo.negocio.Calculo;
 import colectivo.negocio.SistemaColectivo;
+import colectivo.servicio.InterfazService;
 
 /**
  * Coordinador actúa como intermediario entre la interfaz de usuario y la lógica del sistema de colectivos.
@@ -22,7 +25,7 @@ public class Coordinador {
     private Calculo calculo;
 
     /** Interfaz de usuario asociada al coordinador. */
-    private Interfaz interfaz;
+    private InterfazService interfaz;
     
     /**
      * Obtiene la instancia del sistema de colectivos.
@@ -38,6 +41,7 @@ public class Coordinador {
      */
     public void setSistema(SistemaColectivo sistema) {
         this.sistema = sistema;
+        this.sistema.setCoordinador(this);
     }
 
     /**
@@ -60,7 +64,7 @@ public class Coordinador {
      * Obtiene la interfaz de usuario asociada al coordinador.
      * @return la interfaz asociada
      */
-    public Interfaz getInterfaz() {
+    public InterfazService getInterfaz() {
         return interfaz;
     }
 
@@ -68,8 +72,9 @@ public class Coordinador {
      * Asocia una interfaz de usuario al coordinador.
      * @param interfaz la interfaz a asociar
      */
-    public void setInterfaz(Interfaz interfaz) {
+    public void setInterfaz(InterfazService interfaz) {
         this.interfaz = interfaz;
+        this.interfaz.setCoordinador(this);
     }
 
     /**
@@ -94,5 +99,12 @@ public class Coordinador {
      */
     public Map<Integer, Parada> listarParadas() {
         return sistema.getParadas();
+    }
+    public List<List<Recorrido>> calcularRecorrido(Parada origen, Parada destino, int dia, LocalTime hora) {
+        // Aquí delega al servicio de cálculo
+        return calculo.calcularRecorrido(origen, destino, dia, hora, sistema.getTramos());
+    }
+    public void iniciar(){
+        interfaz.iniciar();
     }
 }

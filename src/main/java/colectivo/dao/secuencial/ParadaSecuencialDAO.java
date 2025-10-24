@@ -2,8 +2,13 @@ package colectivo.dao.secuencial;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.Formatter;
+import java.util.FormatterClosedException;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
+import java.util.Scanner;
+import java.util.TreeMap;
 
 import colectivo.dao.ParadaDAO;
 import colectivo.modelo.Parada;
@@ -11,9 +16,10 @@ import colectivo.util.Util;
 
 public class ParadaSecuencialDAO implements ParadaDAO {
 
-    private static Map<Integer, Parada> paradas;
+    private Map<Integer, Parada> paradas;
     private String name;
     private boolean actualizar;
+
 
     public ParadaSecuencialDAO() {
         // Leemos el nombre del archivo desde el secuencial.properties

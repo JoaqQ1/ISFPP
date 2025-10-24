@@ -1,14 +1,11 @@
 package colectivo.controlador;
 
 import java.io.IOException;
-import java.time.LocalTime;
-import java.util.List;
 
-import colectivo.interfaz.Interfaz;
-import colectivo.modelo.Parada;
-import colectivo.modelo.Recorrido;
 import colectivo.negocio.Calculo;
 import colectivo.negocio.SistemaColectivo;
+import colectivo.servicio.InterfazService;
+import colectivo.servicio.InterfazServiceImpl;
 
 /**
  * Clase principal de la aplicación de consultas del sistema de colectivos.
@@ -20,10 +17,12 @@ public class AplicacionConsultas {
     private Calculo calculo;
 
     /** Interfaz de usuario para ingresar datos y mostrar resultados. */
-    private Interfaz interfaz;
+    private InterfazService interfaz;
 
     /** Coordinador que actúa como intermediario entre la interfaz y el sistema. */
     private Coordinador coordinador;
+
+    SistemaColectivo sistemaColectivo;
 
     /**
      * Método principal que inicia la aplicación.
@@ -33,7 +32,6 @@ public class AplicacionConsultas {
     public static void main(String[] args) throws IOException {
         AplicacionConsultas miAplicacion = new AplicacionConsultas();
         miAplicacion.inciar();
-        miAplicacion.consultar();
     }
 
     /**
@@ -41,43 +39,16 @@ public class AplicacionConsultas {
      * el coordinador, los cálculos y la interfaz de usuario.
      */
     private void inciar() {
+        
         coordinador = new Coordinador();
         calculo = new Calculo();
-        interfaz = new Interfaz();
+        interfaz = new InterfazServiceImpl();
+        sistemaColectivo = SistemaColectivo.getInstancia();
 
         coordinador.setCalculo(calculo);
         coordinador.setInterfaz(interfaz);
-        coordinador.setSistema(SistemaColectivo.getInstancia());
-    }
-
-    /**
-     * Ejecuta la consulta de recorridos entre dos paradas:
-     * <ul>
-     *     <li>Solicita los datos al usuario mediante la interfaz.</li>
-     *     <li>Calcula los recorridos posibles.</li>
-     *     <li>Muestra los resultados al usuario.</li>
-     * </ul>
-     */
-    private void consultar() {
-        // Habilita modo debug para mostrar información de ingreso
-        Interfaz.setDebug(true);
-
-        // Solicitar datos al usuario
-        Parada paradaOrigen = interfaz.ingresarParadaOrigen(coordinador.listarParadas());
-        Parada paradaDestino = interfaz.ingresarParadaDestino(coordinador.listarParadas());
-        int diaSemana = interfaz.ingresarDiaSemana();
-        LocalTime horaLlegaParada = interfaz.ingresarHoraLlegaParada();
-
-        // Realizar cálculo de recorridos
-        List<List<Recorrido>> recorridos = calculo.calcularRecorrido(
-            paradaOrigen,
-            paradaDestino,
-            diaSemana,
-            horaLlegaParada,
-            coordinador.listarTramos()
-        );
-
-        // Mostrar resultado
-        interfaz.resultado(recorridos, paradaOrigen, paradaDestino, horaLlegaParada);
+        coordinador.setSistema(sistemaColectivo);
+        
+        coordinador.iniciar();
     }
 }
