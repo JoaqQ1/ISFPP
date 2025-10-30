@@ -1,10 +1,12 @@
 package colectivo.negocio;
 
+import java.security.KeyStore.Entry;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
@@ -45,6 +47,7 @@ public class Calculo {
         // ? ========== Recorridos Directos ==========√ 
         List<List<Recorrido>> listaRecorridos = new ArrayList<>();
         boolean recorridoDirectoEncontrado = false;
+        boolean recorridoConConexionEncontrado = false;
 
         // Iteramos sobre las líneas que pasan por la parada de origen
         for (Linea l1 : paradaOrigen.getLineas()) {
@@ -68,8 +71,25 @@ public class Calculo {
 
         }
         //? ========== Recorridos con Conexiones ==========
-        if(!recorridoDirectoEncontrado)
-            buscarConexiones(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, tramos, listaRecorridos);
+        if(!recorridoDirectoEncontrado){
+            recorridoConConexionEncontrado = buscarConexiones(
+                                                paradaOrigen, 
+                                                paradaDestino, 
+                                                diaSemana, 
+                                                horaLlegaParada, 
+                                                tramos, 
+                                                listaRecorridos);
+        }
+        if(!recorridoConConexionEncontrado){
+            
+            buscarConexionesCaminando(
+                                    paradaOrigen, 
+                                    paradaDestino, 
+                                    diaSemana, 
+                                    horaLlegaParada, 
+                                    tramos, 
+                                    listaRecorridos);
+        }
         return listaRecorridos;
     }
 
@@ -83,24 +103,31 @@ public class Calculo {
      * Ejemplo: Línea A lleva de origen a parada intermedia, y Línea B conecta desde esa
      * parada intermedia hasta el destino.
      */
-    private void buscarConexiones(
+    private boolean buscarConexiones(
         Parada origen,
         Parada destino,
         int diaSemana,
         LocalTime horaLlegada,
         Map<String, Tramo> tramos,
         List<List<Recorrido>> resultados) {
+        boolean recorridoEncontrado = false;
 
-         for (Linea primeraLinea : origen.getLineas()) {
+        for (Linea primeraLinea : origen.getLineas()) {
             int indexOrigen = primeraLinea.getParadas().indexOf(origen);
             List<Parada> paradasLinea1 = primeraLinea.getParadas().subList(indexOrigen + 1, primeraLinea.getParadas().size());
-
+            
             // Cada parada posterior al origen es candidata a ser punto de transbordo
             for (Parada paradaConexion : paradasLinea1) {
-                boolean yaUsada = false;
+                boolean trasbordoEncontrado = false;
 
                 // Primer tramo del viaje (origen → conexión)
-                Recorrido recorrido1 = crearRecorrido(primeraLinea, origen, paradaConexion, tramos, diaSemana, horaLlegada);
+                Recorrido recorrido1 = crearRecorrido(
+                            primeraLinea,
+                            origen, 
+                            paradaConexion, 
+                            tramos, 
+                            diaSemana, 
+                            horaLlegada);
 
                 // Buscamos una segunda línea que conecte la parada intermedia con el destino
                 for (Linea segundaLinea : paradaConexion.getLineas()) {
@@ -126,19 +153,78 @@ public class Calculo {
                                     combinacion.add(recorrido1);
                                     combinacion.add(recorrido2);
                                     resultados.add(combinacion);
-                                    yaUsada = true;
+                                    trasbordoEncontrado = true;
+                                    recorridoEncontrado = true;
                                     break;
                                 }
                             }
                         }
                     }
                 }
-                if (yaUsada) break;
+                // El primer trasbordo que se encuentra en el que se agrega
+                if (trasbordoEncontrado) {
+                    break;
+                }
+                
+
             }
         }
+
+        return recorridoEncontrado;
     }
 
+    public void buscarConexionesCaminando(
+        Parada origen,
+        Parada destino,
+        int diaSemana,
+        LocalTime horaLlegada,
+        Map<String, Tramo> tramos,
+        List<List<Recorrido>> resultados){
+            for (Linea primeraLinea : origen.getLineas()) {
+                int indexOrigen = primeraLinea.getParadas().indexOf(origen);
+                List<Parada> paradasLinea1 = primeraLinea.getParadas().subList(indexOrigen + 1, primeraLinea.getParadas().size());
 
+                // Cada parada posterior al origen es candidata a ser punto de transbordo
+                for (Parada paradaConexion : paradasLinea1) {
+                    boolean trasbordoEncontrado = false;
+
+                    // Primer tramo del viaje (origen → conexión)
+                    Recorrido recorrido1 = crearRecorrido(primeraLinea,origen, paradaConexion, tramos, diaSemana, horaLlegada);
+                    System.out.println(paradaConexion.getParadaCaminando());
+                    for(Parada paradaCaminando : paradaConexion.getParadaCaminando()){
+                        for(Linea segundaLinea:paradaCaminando.getLineas()){
+                            if(segundaLinea.getParadas().contains(destino)){
+                                LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
+                                Tramo t = tramos.get(Util.claveTramo(paradaConexion, paradaCaminando));
+                                Recorrido recorrido2 = new Recorrido(null, List.of(t.getInicio(),t.getFin()), horaInicioSegundaParte, t.getTiempo());
+                                int indexIntermedia = segundaLinea.getParadas().indexOf(t.getFin());
+                                int indexDestino = segundaLinea.getParadas().indexOf(destino);
+                                
+                                if (indexIntermedia < indexDestino) {
+                                    // El segundo tramo comienza al llegar al punto de conexión
+                                    LocalTime horaInicioTerceraParte = recorrido2.getHoraSalida().plusSeconds(recorrido2.getDuracion());
+                                    Recorrido recorrido3 = crearRecorrido( segundaLinea,t.getFin(),destino,tramos,diaSemana,horaInicioTerceraParte);
+
+                                    
+                                    if (recorrido2 != null) {
+                                        List<Recorrido> combinacion = new ArrayList<>();
+                                        combinacion.add(recorrido1);
+                                        combinacion.add(recorrido2);
+                                        combinacion.add(recorrido3);
+                                        resultados.add(combinacion);
+                                        trasbordoEncontrado = true;
+                                        break;
+                                    }   
+                                }
+                            }
+                        }
+                    }
+                    if (trasbordoEncontrado) {
+                        break;
+                    }
+                }
+            }
+        }
     // ==============================
     // CREACIÓN DE UN RECORRIDO
     // ==============================

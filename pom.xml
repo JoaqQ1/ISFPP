@@ -75,7 +75,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>colectivo.aplicacion.AplicacionConsultas</mainClass>
+                    <mainClass>colectivo.controlador.AplicacionConsultas</mainClass>
                 </configuration>
             </plugin>
 
@@ -83,10 +83,9 @@
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.13</version>
+                <version>0.0.8</version>
                 <configuration>
-                    <mainClass>colectivo.gui.InterfazGrafica</mainClass>
-                    <platform>mac-aarch64</platform>
+                    <mainClass>colectivo.interfaz.impl.gui.InterfazGrafica</mainClass>
                 </configuration>
             </plugin>
 

@@ -10,6 +10,8 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import colectivo.conexion.Factory;
+import colectivo.controlador.Constantes;
 import colectivo.dao.ParadaDAO;
 import colectivo.dao.TramoDAO;
 import colectivo.modelo.Parada;
@@ -19,7 +21,7 @@ import colectivo.util.Util;
 public class TramoSecuencialDAO implements TramoDAO {
 
     private Map<String, Tramo> tramos;
-    private ParadaDAO paradasDAO;
+    // private ParadaDAO paradasDAO;
     private String name;
     private boolean actualizar;
 
@@ -27,7 +29,7 @@ public class TramoSecuencialDAO implements TramoDAO {
         // Leemos el nombre del archivo desde secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle("secuencial");
         name = rb.getString("tramo");
-        paradasDAO = new ParadaSecuencialDAO();
+        // paradasDAO = new ParadaSecuencialDAO();
     }
 
     public Map<String, Tramo> buscarTodos() {
@@ -69,7 +71,7 @@ public class TramoSecuencialDAO implements TramoDAO {
     private Map<String, Tramo> readFromFile(String file) {
         Map<String, Tramo> map = new TreeMap<>();
         Scanner inFile = null;
-        Map<Integer,Parada> paradas = paradasDAO.buscarTodos();
+        Map<Integer,Parada> paradas = ((ParadaDAO) Factory.getInstancia(Constantes.PARADA)).buscarTodos();
 
         try {
             inFile = new Scanner(new File("src/main/resources/" + file));
@@ -80,9 +82,9 @@ public class TramoSecuencialDAO implements TramoDAO {
                 int codFin = inFile.nextInt();
                 int tiempo = inFile.nextInt();
                 int tipo = inFile.nextInt();
-
                 Parada inicio = paradas.get(codInicio);
                 Parada fin = paradas.get(codFin);
+                
                 Tramo tramo = new Tramo(inicio, fin, tiempo, tipo);
                 
                 map.put(Util.claveTramo(inicio, fin), tramo);

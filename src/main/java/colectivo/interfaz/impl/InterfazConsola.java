@@ -20,11 +20,10 @@ public class InterfazConsola implements Interfaz {
 
     private static boolean debug = false;
 
-    private static int origen = 88;
-    private static int destino = 13;
+    private static int origen = 31;
+    private static int destino = 66;
 
     public InterfazConsola(){
-
     }
 
     public void iniciar(){
@@ -158,7 +157,8 @@ public class InterfazConsola implements Interfaz {
         }
         for (List<Recorrido> recorridos : listaRecorridos) {
             for (Recorrido r : recorridos) {
-                System.out.println("Línea: " + r.getLinea().getNombre());
+                String mensajeLinea = r.getLinea() != null ? "Línea: " + r.getLinea().getNombre() : "Caminando" ;
+                System.out.println(mensajeLinea);
                 System.out.println("Paradas: " + r.getParadas());
                 System.out.println("Hora de salida: " + r.getHoraSalida());
                 System.out.println("Duración: " + Tiempo.segundosATiempo(r.getDuracion()));
