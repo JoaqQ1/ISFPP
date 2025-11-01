@@ -80,6 +80,8 @@ public class Calculo {
                                                 tramos, 
                                                 listaRecorridos);
         }
+        
+        //? ========== Recorridos con Caminando ==========
         if(!recorridoConConexionEncontrado){
             
             buscarConexionesCaminando(
@@ -190,13 +192,16 @@ public class Calculo {
 
                     // Primer tramo del viaje (origen → conexión)
                     Recorrido recorrido1 = crearRecorrido(primeraLinea,origen, paradaConexion, tramos, diaSemana, horaLlegada);
-                    System.out.println(paradaConexion.getParadaCaminando());
+                    
                     for(Parada paradaCaminando : paradaConexion.getParadaCaminando()){
                         for(Linea segundaLinea:paradaCaminando.getLineas()){
                             if(segundaLinea.getParadas().contains(destino)){
+                                
                                 LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
                                 Tramo t = tramos.get(Util.claveTramo(paradaConexion, paradaCaminando));
+                                
                                 Recorrido recorrido2 = new Recorrido(null, List.of(t.getInicio(),t.getFin()), horaInicioSegundaParte, t.getTiempo());
+                                
                                 int indexIntermedia = segundaLinea.getParadas().indexOf(t.getFin());
                                 int indexDestino = segundaLinea.getParadas().indexOf(destino);
                                 

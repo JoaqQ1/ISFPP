@@ -20,13 +20,13 @@ public class InterfazGrafica extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         // El FXML ahora asume que el controlador es InterfazController
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("mainscene.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("views/mainscene.fxml"));
         Scene scene = new Scene(loader.load());
-        
+        scene.getStylesheets().add(getClass().getResource("/views/styles/estilos.css").toExternalForm());
         // Conectar el Controlador con el Coordinador
         InterfazController controller = loader.getController();
         controller.setCoordinador(coordinadorEstatico); // Se inyecta la dependencia
-        controller.cargarDatosIniciales();              // Se cargan los ComboBox
+        controller.cargarInterfaz();              // Se cargan los ComboBox
 
         primaryStage.setScene(scene);
         primaryStage.setTitle("Simulación de Colectivos");
