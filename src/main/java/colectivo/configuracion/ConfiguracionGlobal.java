@@ -20,7 +20,7 @@ public class ConfiguracionGlobal {
     }
     private ConfiguracionGlobal() {
         propiedades = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
             if (input == null) {
                 throw new IOException("Archivo de configuración no encontrado");
             }

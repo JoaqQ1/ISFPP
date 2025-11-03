@@ -7,7 +7,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import colectivo.conexion.Factory;
 import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;

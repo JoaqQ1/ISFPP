@@ -122,16 +122,40 @@
                      </children>
                   </FlowPane>
 
-                  <Button fx:id="btnMostrarRecorrido" mnemonicParsing="false" onAction="#handleCalcularRecorrido" prefHeight="45.0" prefWidth="217.0" text="%button.show_routes" />
+                  <!-- <Button fx:id="btnMostrarRecorrido" mnemonicParsing="false" onAction="#handleCalcularRecorrido" prefHeight="45.0" prefWidth="217.0" text="%button.show_routes" /> -->
+                  <StackPane alignment="CENTER">
+                     <children>
+                        <Button fx:id="btnMostrarRecorrido" 
+                              mnemonicParsing="false" 
+                              onAction="#handleCalcularRecorrido" 
+                              prefHeight="45.0" 
+                              prefWidth="217.0" 
+                              text="%button.show_routes" />
+                        
+                        <Button fx:id="btnCancelarCalculo" 
+                              mnemonicParsing="false" 
+                              onAction="#handleCancelarCalculo" 
+                              prefHeight="45.0" 
+                              prefWidth="217.0" 
+                              text="%button.cancel" 
+                              visible="false" 
+                              style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;" />
+                     </children>
+                  </StackPane>
                   <VBox spacing="10" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20" AnchorPane.topAnchor="220">
                      <Label fx:id="lblRutasDisponibles" style="-fx-font-size: 18; -fx-font-weight: bold;" text="%label.available_routes" />
                      <ScrollPane fitToWidth="true" prefHeight="300">
                         <content>
-                              <VBox fx:id="contenedorRecorridos" spacing="12" />
+                           <StackPane fx:id="stackPaneResultados">
+                              <children>
+                                 <VBox fx:id="contenedorRecorridos" spacing="12" />
+                                 
+                                 <ProgressIndicator fx:id="spinnerLoading" prefHeight="80.0" prefWidth="80.0" visible="false" />
+                              </children>
+                           </StackPane>
                         </content>
                      </ScrollPane>
                   </VBox>
-                  <!-- <Button fx:id="btnSwitchLanguage" mnemonicParsing="false" onAction="#handleSwitchLanguage" prefHeight="45.0" prefWidth="217.0" text="Cambiar idioma" /> -->
                   <Button fx:id="btnLimpiarInterfaz" mnemonicParsing="false" onAction="#handleLimpiarInterfaz" prefHeight="45.0" prefWidth="217.0" text="%button.clear" />
                </children>
                <HBox.margin>
