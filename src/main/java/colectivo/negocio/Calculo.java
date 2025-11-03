@@ -190,7 +190,7 @@ public class Calculo {
 
                     // Primer tramo del viaje (origen → conexión)
                     Recorrido recorrido1 = crearRecorrido(primeraLinea,origen, paradaConexion, tramos, diaSemana, horaLlegada);
-                    System.out.println(paradaConexion.getParadaCaminando());
+                    
                     for(Parada paradaCaminando : paradaConexion.getParadaCaminando()){
                         for(Linea segundaLinea:paradaCaminando.getLineas()){
                             if(segundaLinea.getParadas().contains(destino)){

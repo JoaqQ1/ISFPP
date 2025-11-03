@@ -1,6 +1,7 @@
 package colectivo.negocio;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import colectivo.controlador.Coordinador;
 import colectivo.coordinador.Coordinable;
@@ -46,8 +47,11 @@ public class SistemaColectivo implements Coordinable{
         this.tramoService = new TramoServiceImpl();
 
         this.lineas = lineaService.buscarTodos();
+
         this.paradas = paradaService.buscarTodos();
+        
         this.tramos = tramoService.buscarTodos();
+
     }
 
     /**
