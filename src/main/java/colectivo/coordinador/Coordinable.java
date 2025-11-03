@@ -1,7 +1,7 @@
 package colectivo.coordinador;
 
-import colectivo.controlador.Coordinador;
+import colectivo.controlador.CoordinadorApp;
 
 public interface Coordinable {
-    void setCoordinador(Coordinador coordinador);
+    void setCoordinador(CoordinadorApp coordinador);
 }

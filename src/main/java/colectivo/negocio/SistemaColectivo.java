@@ -2,7 +2,7 @@ package colectivo.negocio;
 
 import java.util.Map;
 
-import colectivo.controlador.Coordinador;
+import colectivo.controlador.CoordinadorApp;
 import colectivo.coordinador.Coordinable;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
@@ -34,7 +34,7 @@ public class SistemaColectivo implements Coordinable{
     private Map<Integer, Parada> paradas;
     private Map<String, Tramo> tramos;
 
-    private Coordinador coordinador;
+    private CoordinadorApp coordinador;
 
     /**
      * Constructor privado que inicializa los servicios y carga los datos.
@@ -90,7 +90,7 @@ public class SistemaColectivo implements Coordinable{
         return tramos;
     }
 
-    public void setCoordinador(Coordinador coordinador){
+    public void setCoordinador(CoordinadorApp coordinador){
         this.coordinador = coordinador;
     }
 }

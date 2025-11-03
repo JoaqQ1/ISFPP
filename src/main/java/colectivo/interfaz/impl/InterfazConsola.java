@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import colectivo.controlador.Coordinador;
+import colectivo.controlador.CoordinadorApp;
 import colectivo.interfaz.Interfaz;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
@@ -16,7 +16,7 @@ public class InterfazConsola implements Interfaz {
     
     private static final Scanner sc = new Scanner(System.in);
 
-    private Coordinador coordinador;
+    private CoordinadorApp coordinador;
 
     private static boolean debug = false;
 
@@ -40,7 +40,7 @@ public class InterfazConsola implements Interfaz {
 
         resultado(recorridos, origen, destino, hora);
     }
-    public void setCoordinador(Coordinador coordinador){
+    public void setCoordinador(CoordinadorApp coordinador){
         this.coordinador = coordinador;
     }
     /**

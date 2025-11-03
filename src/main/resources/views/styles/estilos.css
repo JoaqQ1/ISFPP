@@ -28,3 +28,9 @@
 .scroll-pane {
     -fx-background-color: transparent;
 }
+.combo-idioma {
+    -fx-background-color: #66cdaa;
+    -fx-border-color: white;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}

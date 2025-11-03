@@ -2,7 +2,7 @@ package colectivo.servicio;
 
 import colectivo.conexion.Factory;
 import colectivo.controlador.Constantes;
-import colectivo.controlador.Coordinador;
+import colectivo.controlador.CoordinadorApp;
 import colectivo.interfaz.Interfaz;
 
 public class InterfazServiceImpl implements InterfazService{
@@ -17,7 +17,7 @@ public class InterfazServiceImpl implements InterfazService{
     public void iniciar(){
         interfaz.iniciar();
     }
-    public void setCoordinador(Coordinador coordinador){
+    public void setCoordinador(CoordinadorApp coordinador){
         interfaz.setCoordinador(coordinador);
     }
 }

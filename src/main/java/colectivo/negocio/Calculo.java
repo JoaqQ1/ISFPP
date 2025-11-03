@@ -25,7 +25,36 @@ import colectivo.util.Util;
  */
 public class Calculo {
 
+    private Map<String, Object> datosEnMemoria;
     public Calculo(){}
+    public Calculo(Map<String, Object> datosEnMemoria){
+        this();
+        this.datosEnMemoria = datosEnMemoria;
+    }
+
+    private Map<String, Tramo> getTramos() {
+        return (Map<String, Tramo>) datosEnMemoria.get("tramos");
+    }
+
+
+    /**
+     *  Calcula todos los recorridos posibles entre una parada origen y una parada destino,
+     * con datos en memoria.
+     * @param paradaOrigen Parada de origen
+     * @param paradaDestino Parda de destino
+     * @param diaSemana Día de la semana
+     * @param horaLlegaParada Hora en que el pasajero llega a la parada
+     * @return Lista de listas de recorridos posibles
+     */
+    public List<List<Recorrido>> calcularRecorrido(
+        Parada paradaOrigen,
+        Parada paradaDestino,
+        int diaSemana,
+        LocalTime horaLlegaParada) {
+
+        return calcularRecorrido(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, getTramos());
+    }
+
     /**
      * Calcula todos los recorridos posibles entre una parada origen y una parada destino,
      * considerando las líneas que conectan ambas.

@@ -1,6 +1,6 @@
 package colectivo.interfaz.impl.gui; // Usamos un subpaquete para distinguir de la clase Application
 
-import colectivo.controlador.Coordinador;
+import colectivo.controlador.CoordinadorApp;
 import colectivo.interfaz.Interfaz;
 
 /**
@@ -8,15 +8,16 @@ import colectivo.interfaz.Interfaz;
  */
 public class InterfazGUIImpl implements Interfaz {
 
-    private Coordinador coordinador;
+    private CoordinadorApp coordinador;
 
     @Override
-    public void setCoordinador(Coordinador coordinador) {
+    public void setCoordinador(CoordinadorApp coordinador) {
         this.coordinador = coordinador;
     }
 
     @Override
     public void iniciar() {
+        
         InterfazGrafica.launchApp(coordinador, new String[]{});
     }
 }

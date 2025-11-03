@@ -1,9 +1,14 @@
 package colectivo.controlador;
 
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
+import colectivo.conexion.Factory;
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
@@ -11,12 +16,13 @@ import colectivo.modelo.Tramo;
 import colectivo.negocio.Calculo;
 import colectivo.negocio.SistemaColectivo;
 import colectivo.servicio.InterfazService;
+import colectivo.servicio.InterfazServiceImpl;
 
 /**
  * Coordinador actúa como intermediario entre la interfaz de usuario y la lógica del sistema de colectivos.
  * Permite acceder a las entidades del sistema como líneas, paradas y tramos, así como a los cálculos asociados.
  */
-public class Coordinador {
+public class CoordinadorApp {
 
     /** Instancia del sistema de colectivos que mantiene todas las entidades. */
     private SistemaColectivo sistema;
@@ -26,6 +32,10 @@ public class Coordinador {
 
     /** Interfaz de usuario asociada al coordinador. */
     private InterfazService interfaz;
+
+    private ConfiguracionGlobal config;
+
+    private Map<String, Object> datos;
     
     /**
      * Obtiene la instancia del sistema de colectivos.
@@ -102,9 +112,60 @@ public class Coordinador {
     }
     public List<List<Recorrido>> calcularRecorrido(Parada origen, Parada destino, int dia, LocalTime hora) {
         // Aquí delega al servicio de cálculo
-        return calculo.calcularRecorrido(origen, destino, dia, hora, sistema.getTramos());
+        return calculo.calcularRecorrido(origen, destino, dia, hora, (Map<String,Tramo>)datos.get(Constantes.TRAMO));
     }
     public void iniciar(){
         interfaz.iniciar();
+    }
+
+    public void inicializarAplicacion(){
+        config = ConfiguracionGlobal.geConfiguracionGlobal();
+
+        inicializarServicios();
+
+        cargarDatos();
+
+        inicializarNegocio();
+
+        inicializarInterfazUsuario();
+    }
+
+    private void inicializarServicios(){
+        sistema = SistemaColectivo.getInstancia();
+    }
+
+    private void cargarDatos(){
+        datos = new HashMap<>();
+        datos.put(Constantes.PARADA,sistema.getParadas());
+        datos.put(Constantes.LINEA,sistema.getLineas());
+        datos.put(Constantes.TRAMO,sistema.getTramos());
+    }
+    private void inicializarNegocio(){
+        calculo = new Calculo(datos);
+    }
+    private void inicializarInterfazUsuario(){
+        interfaz = new InterfazServiceImpl();
+        interfaz.setCoordinador(this);
+        interfaz.iniciar();
+    }
+
+    public ResourceBundle getResourceBundle(){
+        return config.getResourceBundle();
+    }
+    public void setIdioma(Locale locale) {
+        if (config == null)
+            config = ConfiguracionGlobal.geConfiguracionGlobal();
+        config.setLocale(locale);
+    }
+    /**
+     * Cambia la fuente de datos (ej. "TXT" a "BD") y recarga todo el sistema.
+     * Este método es llamado por la InterfazController.
+     *
+     * @param tipoPersistencia El nuevo tipo (ej. "TXT" o "BD")
+     */
+    public void cambiarFuenteDeDatos(String tipoPersistencia) {
+        if (config == null)
+            config = ConfiguracionGlobal.geConfiguracionGlobal();
+        config.setPersistenciaTipo(tipoPersistencia);
     }
 }

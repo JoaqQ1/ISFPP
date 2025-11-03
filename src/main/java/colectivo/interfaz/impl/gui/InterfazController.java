@@ -18,13 +18,16 @@ import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
 
-import colectivo.controlador.Coordinador;
+import colectivo.controlador.Constantes;
+import colectivo.controlador.CoordinadorApp;
 import colectivo.coordinador.Coordinable;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
 import colectivo.util.Tiempo;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingNode;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -33,6 +36,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -44,7 +51,7 @@ import javafx.util.StringConverter;
  * al usuario seleccionar una parada de origen, destino, día y hora para calcular posibles recorridos.</p>
  * 
  * <p>También administra la integración del mapa (usando Swing dentro de JavaFX) y se comunica
- * con el objeto {@link Coordinador}, que maneja la lógica del dominio.</p>
+ * con el objeto {@link CoordinadorApp}, que maneja la lógica del dominio.</p>
  */
 public class InterfazController implements Initializable, Coordinable {
 
@@ -57,6 +64,7 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML private Label lblHorario;
     @FXML private Label lblOrigen;
     @FXML private Label lblTitulo;
+    @FXML private Label lblRutasDisponibles;
     @FXML private ComboBox<String> cbxDia;
     @FXML private ComboBox<Parada> cbxOrigen;
     @FXML private ComboBox<Parada> cbxDestino;
@@ -67,13 +75,31 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML private Button btnZoomIn, btnZoomOut;
     @FXML private SwingNode swingNodeMapa;
 
+    //====================================================
+    @FXML private ToggleGroup grupoIdiomas;
+    @FXML private RadioMenuItem menuIdiomaEs;
+    @FXML private RadioMenuItem menuIdiomaEn;
+
+    // Grupo de Tipos de Archivo
+    // @FXML private ToggleGroup grupoArchivos;
+    // @FXML private RadioMenuItem menuArchivoJson;
+    // @FXML private RadioMenuItem menuArchivoXml;
+
+    // --- Elementos del Menú ---
+    @FXML private Menu menuConfig;
+    @FXML private Menu menuConfigIdioma;
+    @FXML private MenuItem menuConfigSalir;
+    
+    //====================================================
+
     private JXMapViewer mapViewer;
     private final Map<String, Integer> mapaDias = new HashMap<>();
-    private Coordinador coordinador;
+    private CoordinadorApp coordinador;
     private static Random generator = new Random();
+    ResourceBundle rb;
 
     /**
-     * Inyecta la referencia del {@link Coordinador} en este controlador.
+     * Inyecta la referencia del {@link CoordinadorApp} en este controlador.
      * 
      * <p>Esto permite que la interfaz gráfica acceda a los métodos de negocio y datos
      * del sistema (por ejemplo, listar paradas o calcular recorridos).</p>
@@ -81,7 +107,7 @@ public class InterfazController implements Initializable, Coordinable {
      * @param coordinador instancia principal de Coordinador que maneja la lógica de la aplicación.
      */
     @Override
-    public void setCoordinador(Coordinador coordinador) {
+    public void setCoordinador(CoordinadorApp coordinador) {
         this.coordinador = coordinador;
     }
 
@@ -95,6 +121,14 @@ public class InterfazController implements Initializable, Coordinable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Agrupa los idiomas
+        menuIdiomaEs.setToggleGroup(grupoIdiomas);
+        menuIdiomaEn.setToggleGroup(grupoIdiomas);
+        
+        // Agrupa los tipos de archivo
+        // menuArchivoJson.setToggleGroup(grupoArchivos);
+        // menuArchivoXml.setToggleGroup(grupoArchivos);
+
         cargarInterfaz();
         createAndSetSwingContent(swingNodeMapa);
     }
@@ -110,24 +144,27 @@ public class InterfazController implements Initializable, Coordinable {
             System.err.println("Coordinador no inicializado. No se pudo cargar la información.");
             return;
         }
-
-        cbxDia.setPromptText("Seleccione el día");
-        cbxOrigen.setPromptText("Seleccione la parada de origen");
-        cbxDestino.setPromptText("Seleccione la parada de destino");
-        cbxHora.setPromptText("Seleccione la hora");
-        cbxMinuto.setPromptText("Seleccione el minuto");
+        rb = coordinador.getResourceBundle();
         
-        mapaDias.put("Lunes",1);
-        mapaDias.put("Martes",2);
-        mapaDias.put("Miercoles",3);
-        mapaDias.put("Jueves",4);
-        mapaDias.put("Viernes",5);
-        mapaDias.put("Sabado",6);
-        mapaDias.put("Domingo o feriado",7);
+        mapaDias.put(rb.getString("cbx.day.monday"),1);
+        mapaDias.put(rb.getString("cbx.day.tuesday"),2);
+        mapaDias.put(rb.getString("cbx.day.wednesday"),3);
+        mapaDias.put(rb.getString("cbx.day.thursday"),4);
+        mapaDias.put(rb.getString("cbx.day.friday"),5);
+        mapaDias.put(rb.getString("cbx.day.saturday"),6);
+        mapaDias.put(rb.getString("cbx.day.sunday"),7);
 
         // Llenado de los ComboBox
-        List<String> dias = List.of("Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo o feriado");
+        List<String> dias = List.of(rb.getString("cbx.day.monday"), rb.getString("cbx.day.tuesday"), rb.getString("cbx.day.wednesday"), rb.getString("cbx.day.thursday"), rb.getString("cbx.day.friday"), rb.getString("cbx.day.saturday"), rb.getString("cbx.day.sunday"));
         cbxDia.setItems(FXCollections.observableArrayList(dias));
+
+
+        cbxDia.setPromptText(rb.getString("label.day"));
+        cbxOrigen.setPromptText(rb.getString("label.origin"));
+        cbxDestino.setPromptText(rb.getString("label.destination"));
+
+        cbxHora.setPromptText(rb.getString("prompt.hour"));
+        cbxMinuto.setPromptText(rb.getString("prompt.minute"));
 
         List<String> horas = new ArrayList<>();
         List<String> minutos = new ArrayList<>();
@@ -176,12 +213,13 @@ public class InterfazController implements Initializable, Coordinable {
             Parada destino = cbxDestino.getValue();
             String horaStr = cbxHora.getValue();
             String minutoStr = cbxMinuto.getValue();
-
+            
             int dia = mapaDias.get(diaStr);
             LocalTime horaLlegadaParada = LocalTime.parse(horaStr + ":" + minutoStr);
+            
             mostrarRecorridos(origen, destino, dia, horaLlegadaParada);
         } catch (Exception e) {
-            mostrarAlerta("Error de Cálculo", "Ocurrió un error al procesar el recorrido: " + e.getMessage());
+            mostrarAlerta("alert.title.calc_error", "alert.calc_error_body");
             e.printStackTrace();
         }
     }
@@ -201,6 +239,7 @@ public class InterfazController implements Initializable, Coordinable {
      * @param horaLlegaParada hora de llegada a la parada (usada para calcular resumen/duración).
      */
     private void mostrarRecorridos(Parada origen, Parada destino, int dia, LocalTime horaLlegaParada) {
+        
         contenedorRecorridos.getChildren().clear();
 
         // Solicita al coordinador las alternativas de recorridos con los datos seleccionados
@@ -224,7 +263,7 @@ public class InterfazController implements Initializable, Coordinable {
             """);
 
             // Título de bloque
-            Label lblTitulo = new Label("Recorrido sugerido");
+            Label lblTitulo = new Label(rb.getString("label.suggested_route"));
             lblTitulo.setStyle("-fx-font-size: 17; -fx-font-weight: bold; -fx-text-fill: #222;");
 
             VBox contenedorTramos = new VBox(8);
@@ -232,7 +271,7 @@ public class InterfazController implements Initializable, Coordinable {
 
             // Para cada tramo del viaje creamos una tarjeta con sus datos
             for (Recorrido r : recorridos) {
-                String linea = (r.getLinea() != null) ? "Línea: " + r.getLinea().getNombre() : "Caminando";
+                String linea = (r.getLinea() != null) ? r.getLinea().getNombre() : rb.getString("label.walking");
 
                 // Construimos texto de paradas separadas por flecha
                 List<Parada> paradasList = r.getParadas();
@@ -240,9 +279,9 @@ public class InterfazController implements Initializable, Coordinable {
                         .map(Parada::getDireccion)
                         .collect(Collectors.joining(" → "));
 
-                String paradas = "Paradas: " + paradasTexto;
-                String hora = "Hora de salida: " + r.getHoraSalida();
-                String duracion = "Duración: " + Tiempo.segundosATiempo(r.getDuracion());
+                String paradas = rb.getString("label.stops") + " " + paradasTexto;
+                String hora = rb.getString("label.departure_time") + " " + r.getHoraSalida();
+                String duracion = rb.getString("label.duration") + " " + Tiempo.segundosATiempo(r.getDuracion());
 
                 // Color aleatorio para identificar visualmente el tramo
                 String color = generarColorAleatorio();
@@ -289,8 +328,8 @@ public class InterfazController implements Initializable, Coordinable {
             """);
 
             Recorrido ultimo = recorridos.get(recorridos.size() - 1);
-            String duracionTotal = "Duración total: " + Tiempo.calcularDuracionTotalViaje(ultimo, horaLlegaParada);
-            String horaLlegada = "Hora de llegada: " + Tiempo.calcularHoraLlegadaDestino(ultimo);
+            String duracionTotal = rb.getString("label.total_duration") + " " + Tiempo.calcularDuracionTotalViaje(ultimo, horaLlegaParada);
+            String horaLlegada = rb.getString("label.arrival_time") + " " + Tiempo.calcularHoraLlegadaDestino(ultimo);
 
             Label lblDuracionTotal = new Label(duracionTotal);
             lblDuracionTotal.setStyle("-fx-text-fill: #222; -fx-font-weight: bold; -fx-font-size: 14;");
@@ -301,7 +340,7 @@ public class InterfazController implements Initializable, Coordinable {
             cardResumen.getChildren().addAll(lblDuracionTotal, lblHoraLlegada);
 
             // Botón que permite ver el recorrido en el mapa (delegando a dibujarRecorrido)
-            Button btnVerRecorrido = new Button("Ver recorrido");
+            Button btnVerRecorrido = new Button(rb.getString("button.view_route"));
             btnVerRecorrido.setStyle("""
                 -fx-background-color: #4ECDC4;
                 -fx-text-fill: white;
@@ -383,6 +422,48 @@ public class InterfazController implements Initializable, Coordinable {
         limpiarInterfaz();
     }
 
+    // =====================================================
+    // =====================================================
+
+
+    @FXML
+    private void handleSalir(ActionEvent event) {
+        Platform.exit();
+        System.exit(0);
+    }
+
+    /**
+     * Se llama cuando el usuario cambia la selección de idioma.
+     */
+    @FXML
+    private void handleIdiomaChange(ActionEvent event) {
+
+        if (menuIdiomaEs.isSelected()) {
+            coordinador.setIdioma(Constantes.IDIOMA_ES);
+            actualizarIdioma(); 
+        } else if (menuIdiomaEn.isSelected()) {
+            coordinador.setIdioma(Constantes.IDIOMA_EN);
+            actualizarIdioma();
+        }
+    }
+
+    // /**
+    //  * Se llama cuando el usuario cambia la selección de tipo de archivo.
+    //  */
+    // @FXML
+    // private void handleArchivoChange(ActionEvent event) {
+    //     // Para saber cuál está seleccionado, puedes usar el ToggleGroup
+    //     RadioMenuItem seleccionado = (RadioMenuItem) grupoArchivos.getSelectedToggle();
+        
+    //     if (seleccionado != null) {
+    //         String tipoArchivo = seleccionado.getText();
+    //         System.out.println("Tipo de archivo seleccionado: " + tipoArchivo);
+    //     }
+    // }
+
+    // =====================================================
+    // =====================================================
+
     private void limpiarInterfaz() {
         contenedorRecorridos.getChildren().clear();
         cbxDia.getSelectionModel().clearSelection();
@@ -391,7 +472,6 @@ public class InterfazController implements Initializable, Coordinable {
         cbxHora.getSelectionModel().clearSelection();
         cbxMinuto.getSelectionModel().clearSelection();
         mapViewer.setOverlayPainter(null);
-        
     }
 
     /**
@@ -411,24 +491,24 @@ public class InterfazController implements Initializable, Coordinable {
 
         if (diaStr == null || diaStr.isEmpty() || origen == null || destino == null ||
             horaStr == null || minutoStr == null) {
-            mostrarAlerta("Datos Incompletos", "Debe completar todos los campos antes de continuar.");
+            mostrarAlerta("alert.title.incomplete", "alert.incomplete");
             return false;
         }
         if (origen.equals(destino)) {
-            mostrarAlerta("Datos Inválidos", "La parada de origen y destino no pueden ser iguales.");
+            mostrarAlerta("alert.title.invalid_data", "alert.invalid_stops");
             return false;
         }
         try {
             int hora = Integer.parseInt(horaStr);
             int minuto = Integer.parseInt(minutoStr);
             if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
-                mostrarAlerta("Hora Inválida", "Ingrese una hora válida entre 00:00 y 23:59.");
+                mostrarAlerta("alert.title.invalid_time", "alert.invalid_time");
                 return false;
             }
             cbxHora.setValue(String.format("%02d", hora));
             cbxMinuto.setValue(String.format("%02d", minuto));
         } catch (NumberFormatException e) {
-            mostrarAlerta("Formato Inválido", "La hora y los minutos deben ser números válidos.");
+            mostrarAlerta("alert.title.invalid_format", "alert.invalid_format_body");
             return false;
         }
         return true;
@@ -442,9 +522,9 @@ public class InterfazController implements Initializable, Coordinable {
      */
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(titulo);
+        alert.setTitle(rb.getString(titulo));
         alert.setHeaderText(null);
-        alert.setContentText(mensaje);
+        alert.setContentText(rb.getString(mensaje));
         alert.showAndWait();
     }
 
@@ -491,6 +571,9 @@ public class InterfazController implements Initializable, Coordinable {
      * @param contenedorDeRecorridos panel donde se insertará el mensaje.
      */
     private void mostrarCardSinResultados(VBox contenedorDeRecorridos){
+        if(rb == null) {
+            rb = coordinador.getResourceBundle();
+        }
         VBox cardSinResultados = new VBox();
         cardSinResultados.setPadding(new Insets(40));
         cardSinResultados.setAlignment(Pos.CENTER);
@@ -500,7 +583,7 @@ public class InterfazController implements Initializable, Coordinable {
             -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 8, 0, 0, 3);
         """);
 
-        Label lblMensaje = new Label("No hay recorridos recomendados");
+        Label lblMensaje = new Label(rb.getString("no_routes.title"));
         lblMensaje.setStyle("""
             -fx-font-size: 18;
             -fx-font-family: Helvetica;
@@ -508,7 +591,7 @@ public class InterfazController implements Initializable, Coordinable {
             -fx-font-weight: bold;
         """);
 
-        Label lblSugerencia = new Label("Por favor, pruebe cambiando la hora o las paradas seleccionadas.");
+        Label lblSugerencia = new Label(rb.getString("no_routes.subtitle"));
         lblSugerencia.setStyle("""
             -fx-font-size: 14;
             -fx-font-family: Helvetica;
@@ -518,4 +601,64 @@ public class InterfazController implements Initializable, Coordinable {
         cardSinResultados.getChildren().addAll(lblMensaje, lblSugerencia);
         contenedorDeRecorridos.getChildren().add(cardSinResultados);
     }
+    public void actualizarIdioma() {
+        if (coordinador == null || coordinador.getResourceBundle() == null) {
+            System.err.println("⚠️ No se pudo actualizar el idioma: coordinador o configuración nulos");
+            return;
+        }
+
+        ResourceBundle bundle = coordinador.getResourceBundle();
+
+        // Labels principales
+        lblTitulo.setText(bundle.getString("app.title"));
+        lblDia.setText(bundle.getString("label.day") + ":");
+        lblOrigen.setText(bundle.getString("label.origin") + ":");
+        lblDestino.setText(bundle.getString("label.destination") + ":");
+        lblHorario.setText(bundle.getString("label.time") + ":");
+        lblRutasDisponibles.setText(bundle.getString("label.available_routes"));
+
+        // Botones
+        btnMostrarRecorrido.setText(bundle.getString("button.show_routes"));
+        btnLimpiarInterfaz.setText(bundle.getString("button.clear"));
+
+        // ComboBox placeholders (prompts)
+        cbxDia.setPromptText(bundle.getString("label.day"));
+        cbxOrigen.setPromptText(bundle.getString("label.origin"));
+        cbxDestino.setPromptText(bundle.getString("label.destination"));
+        cbxHora.setPromptText(bundle.getString("prompt.hour"));
+        cbxMinuto.setPromptText(bundle.getString("prompt.minute"));
+
+        // Menu superior
+        menuConfig.setText(bundle.getString("menu.config"));
+        menuConfigIdioma.setText(bundle.getString("menu.config.language"));
+        menuIdiomaEs.setText(bundle.getString("menu.config.lang.es"));
+        menuIdiomaEn.setText(bundle.getString("menu.config.lang.en"));
+        menuConfigSalir.setText(bundle.getString("menu.config.exit"));
+
+
+        mapaDias.clear(); // Limpia el mapa anterior
+        mapaDias.put(bundle.getString("cbx.day.monday"), 1);
+        mapaDias.put(bundle.getString("cbx.day.tuesday"), 2);
+        mapaDias.put(bundle.getString("cbx.day.wednesday"), 3);
+        mapaDias.put(bundle.getString("cbx.day.thursday"), 4);
+        mapaDias.put(bundle.getString("cbx.day.friday"), 5);
+        mapaDias.put(bundle.getString("cbx.day.saturday"), 6);
+        mapaDias.put(bundle.getString("cbx.day.sunday"), 7);
+
+        // Actualizar los días según idioma
+        cbxDia.getItems().clear();
+        cbxDia.getItems().addAll(
+            bundle.getString("cbx.day.monday"),
+            bundle.getString("cbx.day.tuesday"),
+            bundle.getString("cbx.day.wednesday"),
+            bundle.getString("cbx.day.thursday"),
+            bundle.getString("cbx.day.friday"),
+            bundle.getString("cbx.day.saturday"),
+            bundle.getString("cbx.day.sunday")
+        );
+
+        contenedorRecorridos.getChildren().clear();
+        rb = coordinador.getResourceBundle();
+    }
+
 }
