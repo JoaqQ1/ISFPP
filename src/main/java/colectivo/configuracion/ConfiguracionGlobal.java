@@ -63,5 +63,14 @@ public class ConfiguracionGlobal {
             propiedades.setProperty("persistencia.tipo", tipo);
         }
     }
-    
+    public double getOrigenLatitud() {
+        return Double.parseDouble(propiedades.getProperty("origen.latitud"));
+    }
+
+    public double getOrigenLongitud() {
+        return Double.parseDouble(propiedades.getProperty("origen.longitud"));
+    }
+    public int getZoom() {
+        return Integer.parseInt(propiedades.getProperty("zoom.inicial"));
+    }
 }

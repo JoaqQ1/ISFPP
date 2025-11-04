@@ -3,11 +3,14 @@ package colectivo.ui.impl.javafx;
 import java.net.URL;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +21,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.painter.CompoundPainter;
+import org.jxmapviewer.painter.Painter;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
@@ -25,6 +30,7 @@ import org.jxmapviewer.viewer.TileFactoryInfo;
 import colectivo.constantes.Constantes;
 import colectivo.controlador.Coordinable;
 import colectivo.controlador.CoordinadorApp;
+import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
 import colectivo.util.Tiempo;
@@ -47,6 +53,8 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
@@ -86,8 +94,10 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML private ComboBox<String> cbxDia;
     @FXML private ComboBox<Parada> cbxOrigen;
     @FXML private ComboBox<Parada> cbxDestino;
-    @FXML private ComboBox<String> cbxHora;
-    @FXML private ComboBox<String> cbxMinuto;
+    // @FXML private ComboBox<String> cbxHora;
+    // @FXML private ComboBox<String> cbxMinuto;
+    @FXML private Spinner<Integer> spinnerHora;
+    @FXML private Spinner<Integer> spinnerMinuto;
 
     // --- 1.4. Botones (Buttons) ---
     @FXML private Button btnMostrarRecorrido; 
@@ -108,6 +118,7 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML private Menu menuConfigIdioma;
     @FXML private MenuItem menuConfigSalir;
     @FXML private MenuItem menuInfoVerLogs;
+    @FXML private MenuItem menuMostrarParadas;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="2. Private Fields">
@@ -119,6 +130,10 @@ public class InterfazController implements Initializable, Coordinable {
     private static final Random generator = new Random();
 
     private static final Logger LOGGER = LogManager.getLogger(InterfazController.class.getName());
+
+    private List<Parada> masterListaParadas;
+
+    private List<String> masterListaDias = new ArrayList<>();
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="3. Initialization and Lifecycle">
@@ -140,8 +155,18 @@ public class InterfazController implements Initializable, Coordinable {
         // a la propiedad 'visible' del spinner.
         spinnerLoading.managedProperty().bind(spinnerLoading.visibleProperty());
 
+        SpinnerValueFactory<Integer> horaFactory = 
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 12);
+        spinnerHora.setValueFactory(horaFactory);
+
+        // Configura el Spinner de Minutos (0-59), valor inicial 0, y salta de 5 en 5
+        SpinnerValueFactory<Integer> minutoFactory = 
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0, 5);
+        spinnerMinuto.setValueFactory(minutoFactory);
+        
         // Inicializa el contenido del mapa Swing
         createAndSetSwingContent(swingNodeMapa);
+        
         LOGGER.info("Controlador de interfaz inicializado correctamente.");
     }
 
@@ -158,7 +183,9 @@ public class InterfazController implements Initializable, Coordinable {
         // Ahora que el coordinador existe, cargamos la interfaz.
         // Esto evita un NullPointerException si se llamara desde initialize().
         cargarInterfaz();
+        
         LOGGER.info("Coordinador inyectado correctamente.");
+
     }
 
     /**
@@ -176,20 +203,12 @@ public class InterfazController implements Initializable, Coordinable {
         // Carga los textos iniciales (dependientes del idioma)
         actualizarTextosUI(rb);
 
-        // Llenado de los ComboBox de Hora/Minuto
-        List<String> horas = new ArrayList<>();
-        List<String> minutos = new ArrayList<>();
-        for (int h = 1; h <= 22; h++) horas.add(String.format("%02d", h));
-        for (int m = 0; m <= 59; m++) minutos.add(String.format("%02d", m));
-
-        cbxHora.setItems(FXCollections.observableArrayList(horas));
-        cbxMinuto.setItems(FXCollections.observableArrayList(minutos));
-
         // Llenado de los ComboBox de Paradas
         List<Parada> paradas = new ArrayList<>(coordinador.listarParadas().values());
         cbxOrigen.setItems(FXCollections.observableArrayList(paradas));
         cbxDestino.setItems(FXCollections.observableArrayList(paradas));
 
+        masterListaParadas = new ArrayList<>(coordinador.listarParadas().values());
         // Configura un StringConverter para mostrar la dirección de la parada
         // en lugar del 'toString()' del objeto.
         StringConverter<Parada> paradaConverter = new StringConverter<>() {
@@ -199,11 +218,21 @@ public class InterfazController implements Initializable, Coordinable {
             }
             @Override
             public Parada fromString(String string) {
-                return null; // No se necesita conversión inversa
+                // Cuando el usuario escribe texto y presiona Enter o pierde el foco,
+                // intenta encontrar una Parada que coincida EXACTAMENTE (ignorando may/min).
+                if (string == null || string.isEmpty()) {
+                    return null;
+                }
+                return masterListaParadas.stream()
+                        .filter(p -> p.getDireccion().equalsIgnoreCase(string))
+                        .findFirst()
+                        .orElse(null); // Si no hay coincidencia exacta, retorna null
             }
         };
         cbxOrigen.setConverter(paradaConverter);
+        setupAutoCompleteComboBox(cbxOrigen, masterListaParadas);
         cbxDestino.setConverter(paradaConverter);
+        setupAutoCompleteComboBox(cbxDestino, masterListaParadas);
 
         LOGGER.info("Interfaz cargada con datos iniciales.");
     }
@@ -218,15 +247,22 @@ public class InterfazController implements Initializable, Coordinable {
      */
     @FXML
     private void handleCalcularRecorrido() {
-        if (coordinador == null || !sanitizarDatosEntrada()) {
+        
+        LOGGER.info("El usuario inició el cálculo de recorrido.");
+
+        if (coordinador == null) {
+            LOGGER.error("Coordinador no inicializado. No se puede calcular el recorrido.");
             return; 
         }
-        LOGGER.info("El usuario inició el cálculo de recorrido.");
+        if(!sanitizarDatosEntrada()){
+            LOGGER.error("Datos de entrada no válidos.");
+            return;
+        }
         // 1. Obtener valores (rápido, en el FX-Thread)
         final Parada origen = cbxOrigen.getValue();
         final Parada destino = cbxDestino.getValue();
         final int dia = mapaDias.get(cbxDia.getValue());
-        final LocalTime horaLlegadaParada = LocalTime.parse(cbxHora.getValue() + ":" + cbxMinuto.getValue());
+        final LocalTime horaLlegadaParada = LocalTime.of(spinnerHora.getValue(),spinnerMinuto.getValue());
 
         // 2. Preparar UI: Intercambiar botones y limpiar resultados
         btnMostrarRecorrido.setVisible(false);
@@ -249,12 +285,14 @@ public class InterfazController implements Initializable, Coordinable {
                     Thread.sleep(3000); 
                 } catch (InterruptedException e) {
                     if (isCancelled()) {
+                        LOGGER.info("Cálculo de recorrido cancelado por el usuario.");
                         return null; // Salir si se cancela durante el sleep
                     }
                 }
 
                 // Chequeo final antes de la llamada pesada
                 if (isCancelled()) {
+                    LOGGER.info("Cálculo de recorrido cancelado por el usuario.");
                     return null;
                 }
                 LOGGER.info("Cálculo de recorrido iniciado.");
@@ -454,6 +492,12 @@ public class InterfazController implements Initializable, Coordinable {
         // --- 5. Iniciar la tarea en un hilo nuevo ---
         new Thread(loadLogsTask).start();
     }
+
+    @FXML
+    private void handleDebugPintarParadas(ActionEvent event) {
+        LOGGER.info("Usuario solicitó pintar todas las paradas (modo debug).");
+        debugDibujarTodasLasParadas();
+    }
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="5. UI Logic & Display Methods">
@@ -592,8 +636,8 @@ public class InterfazController implements Initializable, Coordinable {
         cbxDia.setDisable(cargando);
         cbxOrigen.setDisable(cargando);
         cbxDestino.setDisable(cargando);
-        cbxHora.setDisable(cargando);
-        cbxMinuto.setDisable(cargando);
+        spinnerHora.setDisable(cargando);
+        spinnerMinuto.setDisable(cargando);
     }
 
     /**
@@ -646,8 +690,8 @@ public class InterfazController implements Initializable, Coordinable {
         cbxDia.setPromptText(bundle.getString("label.day"));
         cbxOrigen.setPromptText(bundle.getString("label.origin"));
         cbxDestino.setPromptText(bundle.getString("label.destination"));
-        cbxHora.setPromptText(bundle.getString("prompt.hour"));
-        cbxMinuto.setPromptText(bundle.getString("prompt.minute"));
+        // cbxHora.setPromptText(bundle.getString("prompt.hour"));
+        // cbxMinuto.setPromptText(bundle.getString("prompt.minute"));
 
         // Menu superior
         menuConfig.setText(bundle.getString("menu.config"));
@@ -655,27 +699,58 @@ public class InterfazController implements Initializable, Coordinable {
         menuIdiomaEs.setText(bundle.getString("menu.config.lang.es"));
         menuIdiomaEn.setText(bundle.getString("menu.config.lang.en"));
         menuConfigSalir.setText(bundle.getString("menu.config.exit"));
+        menuMostrarParadas.setText(bundle.getString("menu.debug.paint_stops"));
 
         // Actualiza el mapa de días y el ComboBox de días
         mapaDias.clear();
-        mapaDias.put(bundle.getString("cbx.day.monday"), 1);
-        mapaDias.put(bundle.getString("cbx.day.tuesday"), 2);
-        mapaDias.put(bundle.getString("cbx.day.wednesday"), 3);
-        mapaDias.put(bundle.getString("cbx.day.thursday"), 4);
-        mapaDias.put(bundle.getString("cbx.day.friday"), 5);
-        mapaDias.put(bundle.getString("cbx.day.saturday"), 6);
-        mapaDias.put(bundle.getString("cbx.day.sunday"), 7);
+        masterListaDias.clear();
 
-        cbxDia.getItems().clear();
-        cbxDia.getItems().addAll(
-            bundle.getString("cbx.day.monday"),
-            bundle.getString("cbx.day.tuesday"),
-            bundle.getString("cbx.day.wednesday"),
-            bundle.getString("cbx.day.thursday"),
-            bundle.getString("cbx.day.friday"),
-            bundle.getString("cbx.day.saturday"),
-            bundle.getString("cbx.day.sunday")
-        );
+        String diaLunes = bundle.getString("cbx.day.monday");
+        mapaDias.put(diaLunes, 1);
+        masterListaDias.add(diaLunes);
+        
+        String diaMartes = bundle.getString("cbx.day.tuesday");
+        mapaDias.put(diaMartes, 2);
+        masterListaDias.add(diaMartes);
+
+        String diaMiercoles = bundle.getString("cbx.day.wednesday");
+        mapaDias.put(diaMiercoles, 3);
+        masterListaDias.add(diaMiercoles);
+
+        String diaJueves = bundle.getString("cbx.day.thursday");
+        mapaDias.put(diaJueves, 4);
+        masterListaDias.add(diaJueves);
+
+        String diaViernes = bundle.getString("cbx.day.friday");
+        mapaDias.put(diaViernes, 5);
+        masterListaDias.add(diaViernes);
+
+        String diaSabado = bundle.getString("cbx.day.saturday");
+        mapaDias.put(diaSabado, 6);
+        masterListaDias.add(diaSabado);
+
+        String diaDomingo = bundle.getString("cbx.day.sunday");
+        mapaDias.put(diaDomingo, 7);
+        masterListaDias.add(diaDomingo);
+
+        cbxDia.setConverter(new StringConverter<String>() {
+            @Override
+            public String toString(String dia) {
+                return dia; // String a String
+            }
+
+            @Override
+            public String fromString(String string) {
+                // Busca si el texto escrito es un día válido
+                return masterListaDias.stream()
+                        .filter(dia -> dia.equalsIgnoreCase(string))
+                        .findFirst()
+                        .orElse(null); // Si no, es inválido
+            }
+        });
+
+        // 4. Llama a la nueva función de setup
+        setupAutoCompleteStringComboBox(cbxDia, masterListaDias);
     }
     
     /**
@@ -687,8 +762,8 @@ public class InterfazController implements Initializable, Coordinable {
         cbxDia.getSelectionModel().clearSelection();
         cbxOrigen.getSelectionModel().clearSelection();
         cbxDestino.getSelectionModel().clearSelection();
-        cbxHora.getSelectionModel().clearSelection();
-        cbxMinuto.getSelectionModel().clearSelection();
+        spinnerHora.getValueFactory().setValue(12);
+        spinnerMinuto.getValueFactory().setValue(0);
         mapViewer.setOverlayPainter(null);
     }
 
@@ -755,11 +830,9 @@ public class InterfazController implements Initializable, Coordinable {
         String diaStr = cbxDia.getValue() != null ? cbxDia.getValue().trim() : null;
         Parada origen = cbxOrigen.getValue();
         Parada destino = cbxDestino.getValue();
-        String horaStr = cbxHora.getValue() != null ? cbxHora.getValue().trim() : null;
-        String minutoStr = cbxMinuto.getValue() != null ? cbxMinuto.getValue().trim() : null;
+        
 
-        if (diaStr == null || diaStr.isEmpty() || origen == null || destino == null ||
-            horaStr == null || minutoStr == null) {
+        if (diaStr == null || diaStr.isEmpty() || origen == null || destino == null) {
             mostrarAlerta("alert.title.incomplete", "alert.incomplete");
             return false;
         }
@@ -767,19 +840,7 @@ public class InterfazController implements Initializable, Coordinable {
             mostrarAlerta("alert.title.invalid_data", "alert.invalid_stops");
             return false;
         }
-        try {
-            int hora = Integer.parseInt(horaStr);
-            int minuto = Integer.parseInt(minutoStr);
-            if (hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
-                mostrarAlerta("alert.title.invalid_time", "alert.invalid_time");
-                return false;
-            }
-            cbxHora.setValue(String.format("%02d", hora));
-            cbxMinuto.setValue(String.format("%02d", minuto));
-        } catch (NumberFormatException e) {
-            mostrarAlerta("alert.title.invalid_format", "alert.invalid_format_body");
-            return false;
-        }
+        
         return true;
     }
     //</editor-fold>
@@ -811,13 +872,14 @@ public class InterfazController implements Initializable, Coordinable {
             mapViewer.addMouseWheelListener(new org.jxmapviewer.input.ZoomMouseWheelListenerCenter(mapViewer));
 
             mapViewer.setTileFactory(tileFactory);
-            GeoPosition puertoMadryn = new GeoPosition(-42.7692, -65.0385);
-            mapViewer.setZoom(4);
+            GeoPosition puertoMadryn = new GeoPosition(coordinador.getOrigenLatitud(), coordinador.getOrigenLongitud());
+            mapViewer.setZoom(coordinador.getZoom());
             mapViewer.setAddressLocation(puertoMadryn);
 
             swingNode.setContent(mapViewer);
         });
         LOGGER.info("Mapa SwingNode inicializado correctamente.");
+        
     }
 
     /**
@@ -854,4 +916,181 @@ public class InterfazController implements Initializable, Coordinable {
         return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
     }
     //</editor-fold>
+
+    /**
+     * [DEBUG] Dibuja *todas* las paradas conocidas por el coordinador,
+     * coloreando cada línea con un color distinto.
+     * <p>Las paradas que no pertenecen a ninguna línea se verán en GRIS.</p>
+     */
+    public void debugDibujarTodasLasParadas() {
+        if (coordinador == null) {
+            LOGGER.warn("Debug: Coordinador nulo, no se pueden dibujar paradas.");
+            return;
+        }
+        if (mapViewer == null) {
+            LOGGER.warn("Debug: MapViewer nulo, no se pueden dibujar paradas.");
+            return;
+        }
+
+        LOGGER.info("Iniciando dibujado de debug: coloreando paradas por línea.");
+
+        // 1. Lista para guardar todos los painters (uno por cada capa)
+        List<Painter<JXMapViewer>> painters = new ArrayList<>();
+
+        // 2. CAPA BASE: Dibujamos TODAS las paradas primero en color GRIS.
+        // Usamos un Set para que no haya duplicados
+        Set<GeoPosition> todasLasParadasGeo = new HashSet<>();
+        for (Parada p : coordinador.listarParadas().values()) {
+            todasLasParadasGeo.add(new GeoPosition(p.getLatitud(), p.getLongitud()));
+        }
+        
+        // Creamos un painter base con todas las paradas en gris
+        ParadasDebugPainter painterBase = new ParadasDebugPainter(
+            todasLasParadasGeo, 
+            java.awt.Color.GRAY
+        );
+        painters.add(painterBase);
+
+
+        // 3. CAPAS DE LÍNEA: Iteramos por cada línea, como sugeriste
+        for (Linea linea : coordinador.listarLineas().values()) {
+            
+            // 4. Obtenemos las paradas de ESTA línea
+            Collection<GeoPosition> paradasDeLinea = new ArrayList<>();
+            if (linea.getParadas() != null) {
+                for (Parada p : linea.getParadas()) {
+                    paradasDeLinea.add(new GeoPosition(p.getLatitud(), p.getLongitud()));
+                }
+            }
+
+            if (!paradasDeLinea.isEmpty()) {
+                // 5. Generamos un color aleatorio para esta línea
+                java.awt.Color colorLinea = java.awt.Color.decode(generarColorAleatorio());
+
+                // 6. Creamos un painter específico para esta línea con su color
+                ParadasDebugPainter painterLinea = new ParadasDebugPainter(
+                    paradasDeLinea, 
+                    colorLinea
+                );
+                
+                // 7. Lo agregamos a la lista
+                // (Se dibujará "encima" de la capa base gris)
+                painters.add(painterLinea);
+            }
+        }
+
+        // 8. Creamos un CompoundPainter que combine todos los painters de la lista
+        CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(painters);
+
+        // 9. Asignamos el CompoundPainter al mapa
+        mapViewer.setOverlayPainter(compoundPainter);
+        LOGGER.info("Debug: {} painters (1 base + {} líneas) dibujados en el mapa.",
+                painters.size(), painters.size() - 1);
+    }
+    /**
+     * Configura un ComboBox editable para que funcione como un campo de 
+     * autocompletado/búsqueda.
+     * * @param comboBox El ComboBox (editable) a configurar.
+     * @param masterList La lista completa de Paradas para filtrar.
+     */
+    private void setupAutoCompleteComboBox(ComboBox<Parada> comboBox, List<Parada> masterList) {
+        
+        // 1. Establece la lista inicial (todas las paradas)
+        comboBox.setItems(FXCollections.observableArrayList(masterList));
+
+        // 2. Listener para filtrar la lista mientras el usuario escribe
+        comboBox.getEditor().setOnKeyReleased(event -> {
+            String typedText = comboBox.getEditor().getText();
+
+            // Si no hay texto, muestra la lista completa
+            if (typedText == null || typedText.isEmpty()) {
+                comboBox.setItems(FXCollections.observableArrayList(masterList));
+                comboBox.hide(); // Oculta si está vacío
+            } else {
+                // Filtra la lista maestra
+                List<Parada> filteredList = masterList.stream()
+                        .filter(p -> 
+                            p.getDireccion().toLowerCase()
+                            .contains(typedText.toLowerCase())
+                        )
+                        .collect(Collectors.toList());
+
+                // Actualiza los items y muestra el desplegable
+                comboBox.setItems(FXCollections.observableArrayList(filteredList));
+                comboBox.show(); // Muestra los resultados
+            }
+        });
+
+        // 3. Listener para validar/limpiar cuando se pierde el foco
+        comboBox.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // Si pierde el foco (newVal == false)
+                Parada selectedParada = comboBox.getValue();
+                
+                if (selectedParada != null) {
+                    // Hay un objeto Parada válido seleccionado.
+                    // Asegura que el texto del editor coincida (formato)
+                    comboBox.getEditor().setText(selectedParada.getDireccion());
+                } else {
+                    // No hay un objeto Parada válido (texto inválido)
+                    // Limpia el editor.
+                    comboBox.getEditor().setText(null);
+                }
+            }
+        });
+    }
+    /**
+     * Configura un ComboBox editable de Strings para que funcione como
+     * un campo de autocompletado/búsqueda.
+     * @param comboBox El ComboBox (editable) a configurar.
+     * @param masterList La lista completa de Strings para filtrar.
+     */
+    private void setupAutoCompleteStringComboBox(ComboBox<String> comboBox, List<String> masterList) {
+        
+        // 1. Establece la lista inicial
+        comboBox.setItems(FXCollections.observableArrayList(masterList));
+
+        // 2. Listener para filtrar la lista mientras el usuario escribe
+        comboBox.getEditor().setOnKeyReleased(event -> {
+            String typedText = comboBox.getEditor().getText();
+
+            if (typedText == null || typedText.isEmpty()) {
+                comboBox.setItems(FXCollections.observableArrayList(masterList));
+                comboBox.hide(); 
+            } else {
+                // Filtra la lista maestra (String vs String)
+                List<String> filteredList = masterList.stream()
+                        .filter(item -> 
+                            item.toLowerCase()
+                                .contains(typedText.toLowerCase())
+                        )
+                        .collect(Collectors.toList());
+
+                comboBox.setItems(FXCollections.observableArrayList(filteredList));
+                comboBox.show(); // Muestra los resultados
+            }
+        });
+
+        // 3. Listener para validar/limpiar cuando se pierde el foco
+        comboBox.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // Si pierde el foco
+                // Revisa si el texto actual es un item válido
+                String currentText = comboBox.getEditor().getText();
+                boolean isValid = masterList.stream()
+                                    .anyMatch(item -> item.equalsIgnoreCase(currentText));
+
+                if (isValid) {
+                    // Texto válido. Forzamos el valor (esto dispara el converter)
+                    comboBox.setValue(
+                        masterList.stream()
+                            .filter(item -> item.equalsIgnoreCase(currentText))
+                            .findFirst().orElse(null)
+                    );
+                } else {
+                    // Texto inválido, limpia todo
+                    comboBox.setValue(null);
+                    comboBox.getEditor().setText(null);
+                }
+            }
+        });
+    }
 }

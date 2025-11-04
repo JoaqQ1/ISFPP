@@ -173,4 +173,19 @@ public class CoordinadorApp {
             config = ConfiguracionGlobal.geConfiguracionGlobal();
         return config.getIdiomaActual();
     }
+    public double getOrigenLatitud() {
+        if (config == null)
+            config = ConfiguracionGlobal.geConfiguracionGlobal();
+        return config.getOrigenLatitud();
+    }
+    public double getOrigenLongitud() {
+        if (config == null)
+            config = ConfiguracionGlobal.geConfiguracionGlobal();
+        return config.getOrigenLongitud();
+    }
+    public int getZoom() {
+        if (config == null)
+            config = ConfiguracionGlobal.geConfiguracionGlobal();
+        return config.getZoom();
+    } 
 }

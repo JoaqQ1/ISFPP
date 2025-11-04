@@ -20,10 +20,11 @@ public class InterfazConsola implements Interfaz {
 
     private static boolean debug = false;
 
-    private static int origen = 31;
-    private static int destino = 66;
+    private static int origen = 83;
+    private static int destino = 123;
 
     public InterfazConsola(){
+        debug = true;
     }
 
     public void iniciar(){
