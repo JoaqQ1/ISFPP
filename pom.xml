@@ -13,7 +13,7 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        
+        <javafx.version>21.0.2</javafx.version>
     </properties>
 
     <dependencies>
@@ -41,27 +41,46 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>21.0.2</version>
+            <version>${javafx.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>21.0.2</version>
+            <version>${javafx.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>21.0.2</version>
+            <version>${javafx.version}</version>
         </dependency>
         
+
+        <!-- https://mvnrepository.com/artifact/org.openstreetmap.jmapviewer/jmapviewer -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jxmapviewer</groupId>
+            <artifactId>jxmapviewer2</artifactId>
+            <version>2.8</version>
+        </dependency>
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.8</version>
         </dependency>
-        
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.25.2</version>
+        </dependency>
+
     </dependencies>
 
 
@@ -80,7 +99,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>colectivo.controlador.AplicacionConsultas</mainClass>
+                    <mainClass>colectivo.app.AplicacionConsultas</mainClass>
                 </configuration>
             </plugin>
 
@@ -90,7 +109,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>colectivo.interfaz.impl.gui.InterfazGrafica</mainClass>
+                    <mainClass>colectivo.ui.impl.javafx.InterfazJavaFXImpl</mainClass>
                 </configuration>
             </plugin>
 

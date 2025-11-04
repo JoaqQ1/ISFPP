@@ -4,7 +4,13 @@
     // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "type": "java",
+            "name": "AplicacionConsultas",
+            "request": "launch",
+            "mainClass": "colectivo.app.AplicacionConsultas",
+            "projectName": "colectivo-base"
+        },
         {
             "type": "java",
             "name": "Current File",
@@ -25,6 +31,5 @@
             "mainClass": "colectivo.gui.InterfazGrafica",
             "vmArgs": "--module-path ${workspaceFolder}/target/dependency --add-modules javafx.controls,javafx.fxml"
         }
-
     ]
 }

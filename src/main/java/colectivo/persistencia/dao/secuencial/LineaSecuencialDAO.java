@@ -1,4 +1,4 @@
-package colectivo.dao.secuencial;
+package colectivo.persistencia.dao.secuencial;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,14 +11,19 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.TreeMap;
 
-import colectivo.conexion.Factory;
-import colectivo.controlador.Constantes;
-import colectivo.dao.LineaDAO;
-import colectivo.dao.ParadaDAO;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
+import colectivo.configuracion.Factory;
+import colectivo.constantes.Constantes;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
+import colectivo.persistencia.dao.LineaDAO;
+import colectivo.persistencia.dao.ParadaDAO;
 
 public class LineaSecuencialDAO implements LineaDAO {
+
+    private static final Logger LOGGER = LogManager.getLogger(LineaSecuencialDAO.class.getName());
 
     private Map<String, Linea> lineas;
     private String archivoLineas;
@@ -27,9 +32,10 @@ public class LineaSecuencialDAO implements LineaDAO {
     
     public LineaSecuencialDAO() {
         // Leemos los nombres de archivos desde secuencial.properties
-        ResourceBundle rb = ResourceBundle.getBundle("secuencial");
+        ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
         archivoLineas = rb.getString("linea");
         archivoFrecuencias = rb.getString("frecuencia");
+        LOGGER.info("LineaSecuencialDAO inicializado con archivos: " + archivoLineas + ", " + archivoFrecuencias);
     }
 
     @Override
@@ -37,6 +43,7 @@ public class LineaSecuencialDAO implements LineaDAO {
         if (lineas == null || actualizar) {
             lineas = readFromFile(archivoLineas, archivoFrecuencias);
             actualizar = false;
+            LOGGER.info("Líneas cargadas desde archivos.");
         }
         return lineas;
     }
@@ -75,7 +82,7 @@ public class LineaSecuencialDAO implements LineaDAO {
     private Map<String, Linea> readFromFile(String archivoLineas, String archivoFrecuencias) {
         Map<String, Linea> map = new TreeMap<>();
         Scanner inFile = null;
-        Map<Integer,Parada> paradas = ((ParadaDAO) Factory.getInstancia(Constantes.PARADA)).buscarTodos();
+        Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
         try {
             inFile = new Scanner(new File("src/main/resources/" + archivoLineas));
 
@@ -101,14 +108,16 @@ public class LineaSecuencialDAO implements LineaDAO {
 
             // Agregamos frecuencias desde el segundo archivo
             agregarFrecuencias(archivoFrecuencias, map);
+            LOGGER.info("Frecuencias agregadas desde archivo: " + archivoFrecuencias);
 
         } catch (FileNotFoundException e) {
-            System.err.println("Archivo no encontrado: " + archivoLineas);
+            LOGGER.error("Archivo no encontrado: " + archivoLineas, e);
         } catch (NoSuchElementException e) {
-            System.err.println("Error en la estructura del archivo de líneas.");
+            LOGGER.error("Error en la estructura del archivo de líneas.", e);
         } finally {
             if (inFile != null)
                 inFile.close();
+            LOGGER.info("Lectura de líneas finalizada.");
         }
 
         return map;
@@ -135,7 +144,7 @@ public class LineaSecuencialDAO implements LineaDAO {
             }
 
         } catch (FileNotFoundException e) {
-            System.err.println("Archivo de frecuencias no encontrado: " + archivoFrecuencias);
+            LOGGER.error("Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -170,9 +179,9 @@ public class LineaSecuencialDAO implements LineaDAO {
             }
 
         } catch (FileNotFoundException e) {
-            System.err.println("Error al crear archivo de líneas o frecuencias.");
+            LOGGER.error("Error al crear archivo de líneas o frecuencias.", e);
         } catch (FormatterClosedException e) {
-            System.err.println("Error al escribir en los archivos.");
+            LOGGER.error("Error al escribir en los archivos.", e);
         } finally {
             if (outLineas != null) outLineas.close();
             if (outFrecuencias != null) outFrecuencias.close();

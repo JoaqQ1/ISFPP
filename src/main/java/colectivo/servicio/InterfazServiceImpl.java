@@ -1,9 +1,9 @@
 package colectivo.servicio;
 
-import colectivo.conexion.Factory;
-import colectivo.controlador.Constantes;
-import colectivo.controlador.Coordinador;
-import colectivo.interfaz.Interfaz;
+import colectivo.configuracion.Factory;
+import colectivo.constantes.Constantes;
+import colectivo.controlador.CoordinadorApp;
+import colectivo.ui.Interfaz;
 
 public class InterfazServiceImpl implements InterfazService{
     
@@ -11,13 +11,13 @@ public class InterfazServiceImpl implements InterfazService{
     
     
     public InterfazServiceImpl() {
-        interfaz = (Interfaz) Factory.getInstancia(Constantes.INTERFAZ);
+        interfaz = (Interfaz) Factory.getInstancia(Constantes.INTERFAZ, Interfaz.class);
     }
 
     public void iniciar(){
         interfaz.iniciar();
     }
-    public void setCoordinador(Coordinador coordinador){
+    public void setCoordinador(CoordinadorApp coordinador){
         interfaz.setCoordinador(coordinador);
     }
 }

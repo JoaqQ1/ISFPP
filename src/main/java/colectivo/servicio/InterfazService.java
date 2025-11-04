@@ -1,6 +1,6 @@
 package colectivo.servicio;
 
-import colectivo.coordinador.Coordinable;
+import colectivo.controlador.Coordinable;
 
 public interface InterfazService extends Coordinable{
     void iniciar();

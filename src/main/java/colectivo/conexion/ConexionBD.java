@@ -5,8 +5,12 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.ResourceBundle;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ConexionBD {
+	private static final Logger LOGGER = LogManager.getLogger(ConexionBD.class.getName());
+
 	private static Connection con = null;
 	
 	// Nos conectamos a la base de datos (con los datos de conexión del archivo jdbc.properties)
@@ -29,11 +33,11 @@ public class ConexionBD {
                 try (Statement st = con.createStatement()) {
                     st.execute("SET search_path TO " + sch);
                 }
-			
+				LOGGER.info("Conexion exitosa a la base de datos.");
 			}
 			return con;
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			LOGGER.error("Error al crear la conexion: " + ex.getMessage());
 			throw new RuntimeException("Error al crear la conexion", ex);
 		}
 	}

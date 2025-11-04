@@ -7,16 +7,15 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import colectivo.conexion.ConexionBD;
-import colectivo.conexion.Factory;
-import colectivo.controlador.Constantes;
-import colectivo.dao.LineaDAO;
-import colectivo.dao.ParadaDAO;
+import colectivo.configuracion.Factory;
+import colectivo.constantes.Constantes;
+import colectivo.persistencia.dao.LineaDAO;
+import colectivo.persistencia.dao.ParadaDAO;
 import colectivo.modelo.*;
 
 public class LineaBdDAO implements LineaDAO{

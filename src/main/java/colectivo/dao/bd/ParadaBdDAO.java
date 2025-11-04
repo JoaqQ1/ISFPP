@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import colectivo.conexion.ConexionBD;
-import colectivo.dao.ParadaDAO;
+import colectivo.persistencia.dao.ParadaDAO;
 import colectivo.modelo.Parada;
 
 public class ParadaBdDAO implements ParadaDAO{

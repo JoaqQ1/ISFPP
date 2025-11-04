@@ -1,12 +1,9 @@
 package colectivo.negocio;
-
-import java.security.KeyStore.Entry;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
@@ -25,7 +22,38 @@ import colectivo.util.Util;
  */
 public class Calculo {
 
+    private static final org.apache.logging.log4j.Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger(Calculo.class.getName());
+    private Map<String, Object> datosEnMemoria;
     public Calculo(){}
+    public Calculo(Map<String, Object> datosEnMemoria){
+        this();
+        this.datosEnMemoria = datosEnMemoria;
+        LOGGER.info("Datos en memoria inicializados.");
+    }
+
+    private Map<String, Tramo> getTramos() {
+        return (Map<String, Tramo>) datosEnMemoria.get("tramos");
+    }
+
+
+    /**
+     *  Calcula todos los recorridos posibles entre una parada origen y una parada destino,
+     * con datos en memoria.
+     * @param paradaOrigen Parada de origen
+     * @param paradaDestino Parda de destino
+     * @param diaSemana Día de la semana
+     * @param horaLlegaParada Hora en que el pasajero llega a la parada
+     * @return Lista de listas de recorridos posibles
+     */
+    public List<List<Recorrido>> calcularRecorrido(
+        Parada paradaOrigen,
+        Parada paradaDestino,
+        int diaSemana,
+        LocalTime horaLlegaParada) {
+
+        return calcularRecorrido(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, getTramos());
+    }
+
     /**
      * Calcula todos los recorridos posibles entre una parada origen y una parada destino,
      * considerando las líneas que conectan ambas.
@@ -80,6 +108,8 @@ public class Calculo {
                                                 tramos, 
                                                 listaRecorridos);
         }
+        
+        //? ========== Recorridos con Caminando ==========
         if(!recorridoConConexionEncontrado){
             
             buscarConexionesCaminando(
@@ -89,6 +119,11 @@ public class Calculo {
                                     horaLlegaParada, 
                                     tramos, 
                                     listaRecorridos);
+        }
+        if(listaRecorridos.isEmpty()){
+            LOGGER.info("No se encontraron recorridos entre las paradas indicadas.");
+        } else {
+            LOGGER.info("Total de recorridos encontrados: " + listaRecorridos.size());
         }
         return listaRecorridos;
     }
@@ -111,7 +146,6 @@ public class Calculo {
         Map<String, Tramo> tramos,
         List<List<Recorrido>> resultados) {
         boolean recorridoEncontrado = false;
-
         for (Linea primeraLinea : origen.getLineas()) {
             int indexOrigen = primeraLinea.getParadas().indexOf(origen);
             List<Parada> paradasLinea1 = primeraLinea.getParadas().subList(indexOrigen + 1, primeraLinea.getParadas().size());
@@ -169,7 +203,6 @@ public class Calculo {
 
             }
         }
-
         return recorridoEncontrado;
     }
 
@@ -194,9 +227,12 @@ public class Calculo {
                     for(Parada paradaCaminando : paradaConexion.getParadaCaminando()){
                         for(Linea segundaLinea:paradaCaminando.getLineas()){
                             if(segundaLinea.getParadas().contains(destino)){
+                                
                                 LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
                                 Tramo t = tramos.get(Util.claveTramo(paradaConexion, paradaCaminando));
+                                
                                 Recorrido recorrido2 = new Recorrido(null, List.of(t.getInicio(),t.getFin()), horaInicioSegundaParte, t.getTiempo());
+                                
                                 int indexIntermedia = segundaLinea.getParadas().indexOf(t.getFin());
                                 int indexDestino = segundaLinea.getParadas().indexOf(destino);
                                 

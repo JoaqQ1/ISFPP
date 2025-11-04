@@ -1,0 +1,36 @@
+/* estilos.css */
+.root {
+    -fx-font-family: "Helvetica";
+    -fx-font-size: 10px;
+    -fx-text-fill: #1e1c1c;
+}
+.button {
+    -fx-background-color: #ffffffcc;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-border-color: #ccc;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.button:hover {
+    -fx-background-color: #e0f5ee;
+}
+
+.combo-box, .text-field {
+    -fx-background-radius: 3px;
+}
+
+.label {
+    -fx-wrap-text: true;
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+.combo-idioma {
+    -fx-background-color: #66cdaa;
+    -fx-border-color: white;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
