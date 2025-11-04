@@ -57,12 +57,14 @@ Sigue estos pasos para poner en marcha la aplicación:
 
 Puedes elegir de dónde leerá los datos la aplicación (archivos de texto o base de datos) editando el archivo de configuración:
 
-src/main/resources/factory.properties
-`   # Para usar la base de datos, descomenta esta línea:  IMPLEMENTACION=BD  # Para usar los archivos de texto (lectura secuencial), descomenta esta línea:  # IMPLEMENTACION=SECUENCIAL   `
+src/main/resources/config.properties
+`   # Para usar la base de datos, descomenta esta línea: persistencia.tipo=BD  
+    # Para usar los archivos de texto (lectura secuencial), descomenta esta línea:  # persistencia.tipo=ARCHIVO   
+`
 
 ### 3\. Configuración de la Base de Datos (Opcional)
 
-Si seleccionaste IMPLEMENTACION=BD, debes configurar tu base de datos PostgreSQL:
+Si seleccionaste persistencia.tipo=BD, debes configurar tu base de datos PostgreSQL:
 
 1.  **Crear la Base de Datos:** Crea una nueva base de datos en tu servidor PostgreSQL (ej. colectivos\_db).
     
@@ -110,16 +112,4 @@ Se utiliza el patrón DAO para abstraer la lógica de persistencia de datos.
 
 Se utiliza una clase "Factory" (ubicada en colectivo.configuracion) para instanciar la implementación correcta de los DAO (Secuencial o BD) basándose en lo definido en el archivo factory.properties. Esto permite cambiar la fuente de datos de toda la aplicación sin modificar el código fuente.
 
-### Sobre el Manual de Desarrollo
 
-¡Genial que pienses en el manual de desarrollo!
-
-Ese manual suele ser un documento más detallado que este README. Debería incluir:
-
-1.  **Diagramas de Clases (UML):** Mostrando las relaciones entre las clases clave (Modelos, Servicios, DAOs).
-    
-2.  **Explicación del Flujo de Datos:** Cómo viaja una solicitud desde la UI (ej. "Buscar Recorrido") hasta el DAO y cómo vuelve.
-    
-3.  **Justificación de Diseño:** Por qué se eligió MVC, DAO, Factory y cómo se implementaron.
-    
-4.  **Guía para Añadir Nuevas Funcionalidades:** (Ej. "Cómo añadir una nueva entidad" o "Cómo añadir una nueva fuente de datos").
