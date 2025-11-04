@@ -99,7 +99,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>colectivo.controlador.AplicacionConsultas</mainClass>
+                    <mainClass>colectivo.app.AplicacionConsultas</mainClass>
                 </configuration>
             </plugin>
 
@@ -109,7 +109,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>colectivo.interfaz.impl.gui.InterfazGrafica</mainClass>
+                    <mainClass>colectivo.ui.impl.javafx.InterfazJavaFXImpl</mainClass>
                 </configuration>
             </plugin>
 
