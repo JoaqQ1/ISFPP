@@ -58,6 +58,7 @@ Sigue estos pasos para poner en marcha la aplicación:
 Puedes elegir de dónde leerá los datos la aplicación (archivos de texto o base de datos) editando el archivo de configuración:
 
 src/main/resources/config.properties
+
 `   # Para usar la base de datos, descomenta esta línea: persistencia.tipo=BD  
     # Para usar los archivos de texto (lectura secuencial), descomenta esta línea:  # persistencia.tipo=ARCHIVO   
 `
