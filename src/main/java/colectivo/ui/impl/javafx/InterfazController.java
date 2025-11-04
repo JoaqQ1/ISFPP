@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,6 +57,7 @@ import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -230,9 +232,9 @@ public class InterfazController implements Initializable, Coordinable {
             }
         };
         cbxOrigen.setConverter(paradaConverter);
-        setupAutoCompleteComboBox(cbxOrigen, masterListaParadas);
         cbxDestino.setConverter(paradaConverter);
-        setupAutoCompleteComboBox(cbxDestino, masterListaParadas);
+        setupAutoComplete(cbxOrigen, masterListaParadas, parada -> parada.getDireccion());
+        setupAutoComplete(cbxDestino, masterListaParadas, parada -> parada.getDireccion());
 
         LOGGER.info("Interfaz cargada con datos iniciales.");
     }
@@ -750,7 +752,7 @@ public class InterfazController implements Initializable, Coordinable {
         });
 
         // 4. Llama a la nueva función de setup
-        setupAutoCompleteStringComboBox(cbxDia, masterListaDias);
+        setupAutoComplete(cbxDia, masterListaDias, dia -> dia);
     }
     
     /**
@@ -987,64 +989,19 @@ public class InterfazController implements Initializable, Coordinable {
         LOGGER.info("Debug: {} painters (1 base + {} líneas) dibujados en el mapa.",
                 painters.size(), painters.size() - 1);
     }
+    
     /**
-     * Configura un ComboBox editable para que funcione como un campo de 
-     * autocompletado/búsqueda.
-     * * @param comboBox El ComboBox (editable) a configurar.
-     * @param masterList La lista completa de Paradas para filtrar.
-     */
-    private void setupAutoCompleteComboBox(ComboBox<Parada> comboBox, List<Parada> masterList) {
-        
-        // 1. Establece la lista inicial (todas las paradas)
-        comboBox.setItems(FXCollections.observableArrayList(masterList));
-
-        // 2. Listener para filtrar la lista mientras el usuario escribe
-        comboBox.getEditor().setOnKeyReleased(event -> {
-            String typedText = comboBox.getEditor().getText();
-
-            // Si no hay texto, muestra la lista completa
-            if (typedText == null || typedText.isEmpty()) {
-                comboBox.setItems(FXCollections.observableArrayList(masterList));
-                comboBox.hide(); // Oculta si está vacío
-            } else {
-                // Filtra la lista maestra
-                List<Parada> filteredList = masterList.stream()
-                        .filter(p -> 
-                            p.getDireccion().toLowerCase()
-                            .contains(typedText.toLowerCase())
-                        )
-                        .collect(Collectors.toList());
-
-                // Actualiza los items y muestra el desplegable
-                comboBox.setItems(FXCollections.observableArrayList(filteredList));
-                comboBox.show(); // Muestra los resultados
-            }
-        });
-
-        // 3. Listener para validar/limpiar cuando se pierde el foco
-        comboBox.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) { // Si pierde el foco (newVal == false)
-                Parada selectedParada = comboBox.getValue();
-                
-                if (selectedParada != null) {
-                    // Hay un objeto Parada válido seleccionado.
-                    // Asegura que el texto del editor coincida (formato)
-                    comboBox.getEditor().setText(selectedParada.getDireccion());
-                } else {
-                    // No hay un objeto Parada válido (texto inválido)
-                    // Limpia el editor.
-                    comboBox.getEditor().setText(null);
-                }
-            }
-        });
-    }
-    /**
-     * Configura un ComboBox editable de Strings para que funcione como
-     * un campo de autocompletado/búsqueda.
+     * Configura un ComboBox editable (genérico) para que funcione como un
+     * campo de autocompletado/búsqueda.
+     *
+     * @param <T> El tipo de objeto en el ComboBox (ej. Parada, String).
      * @param comboBox El ComboBox (editable) a configurar.
-     * @param masterList La lista completa de Strings para filtrar.
+     * @param masterList La lista completa de items para filtrar.
+     * @param stringExtractor Una función que toma un objeto <T> y devuelve
+     * el String por el cual se debe buscar.
      */
-    private void setupAutoCompleteStringComboBox(ComboBox<String> comboBox, List<String> masterList) {
+    private <T> void setupAutoComplete(ComboBox<T> comboBox, List<T> masterList, 
+                                     Function<T, String> stringExtractor) {
         
         // 1. Establece la lista inicial
         comboBox.setItems(FXCollections.observableArrayList(masterList));
@@ -1057,11 +1014,12 @@ public class InterfazController implements Initializable, Coordinable {
                 comboBox.setItems(FXCollections.observableArrayList(masterList));
                 comboBox.hide(); 
             } else {
-                // Filtra la lista maestra (String vs String)
-                List<String> filteredList = masterList.stream()
+                // Filtra la lista maestra usando el extractor genérico
+                List<T> filteredList = masterList.stream()
                         .filter(item -> 
-                            item.toLowerCase()
-                                .contains(typedText.toLowerCase())
+                            // Aquí usamos la función que pasamos como parámetro
+                            stringExtractor.apply(item).toLowerCase()
+                                         .contains(typedText.toLowerCase())
                         )
                         .collect(Collectors.toList());
 
@@ -1073,23 +1031,31 @@ public class InterfazController implements Initializable, Coordinable {
         // 3. Listener para validar/limpiar cuando se pierde el foco
         comboBox.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) { // Si pierde el foco
-                // Revisa si el texto actual es un item válido
                 String currentText = comboBox.getEditor().getText();
-                boolean isValid = masterList.stream()
-                                    .anyMatch(item -> item.equalsIgnoreCase(currentText));
 
-                if (isValid) {
+                // Busca un item válido usando el extractor
+                T validItem = masterList.stream()
+                        .filter(item -> stringExtractor.apply(item).equalsIgnoreCase(currentText))
+                        .findFirst()
+                        .orElse(null);
+
+                if (validItem != null) {
                     // Texto válido. Forzamos el valor (esto dispara el converter)
-                    comboBox.setValue(
-                        masterList.stream()
-                            .filter(item -> item.equalsIgnoreCase(currentText))
-                            .findFirst().orElse(null)
-                    );
+                    comboBox.setValue(validItem);
+                    // Nos aseguramos que el texto del editor tenga el formato correcto
+                    comboBox.getEditor().setText(stringExtractor.apply(validItem));
                 } else {
                     // Texto inválido, limpia todo
                     comboBox.setValue(null);
                     comboBox.getEditor().setText(null);
                 }
+            }
+        });
+
+        // 4. Previene que la rueda del mouse cambie la selección
+        comboBox.addEventFilter(ScrollEvent.ANY, event -> {
+            if (!comboBox.isShowing()) {
+                event.consume();
             }
         });
     }
