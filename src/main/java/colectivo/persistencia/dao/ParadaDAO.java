@@ -1,4 +1,4 @@
-package colectivo.dao;
+package colectivo.persistencia.dao;
 
 import java.util.Map;
 

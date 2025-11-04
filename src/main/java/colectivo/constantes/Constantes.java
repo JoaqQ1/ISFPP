@@ -1,4 +1,4 @@
-package colectivo.controlador;
+package colectivo.constantes;
 
 import java.util.Locale;
 
@@ -15,6 +15,12 @@ public class Constantes {
 	
 	public static final String INTERFAZ = "INTERFAZ";
 
+	public static final String ARCHIVO = "ARCHIVO";
+
+	public static final String BD = "BD";
+
 	public static final Locale IDIOMA_ES = new Locale("es", "ES");
     public static final Locale IDIOMA_EN = new Locale("en", "US");
+
+	public static final String PATH_DATA_TXT = "secuencial";
 }

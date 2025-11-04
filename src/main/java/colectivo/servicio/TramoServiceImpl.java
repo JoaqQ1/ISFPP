@@ -2,15 +2,15 @@ package colectivo.servicio;
 
 import java.util.Map;
 
-import colectivo.conexion.Factory;
-import colectivo.controlador.Constantes;
-import colectivo.dao.TramoDAO;
+import colectivo.configuracion.Factory;
+import colectivo.constantes.Constantes;
 import colectivo.modelo.Tramo;
+import colectivo.persistencia.dao.TramoDAO;
 
 public class TramoServiceImpl implements TramoService{
     private TramoDAO tramoDAO;
     public TramoServiceImpl(){
-        tramoDAO = (TramoDAO) Factory.getInstancia(Constantes.TRAMO);
+        tramoDAO = (TramoDAO) Factory.getInstancia(Constantes.TRAMO, TramoDAO.class);
     }
     @Override
     public Map<String, Tramo> buscarTodos() {

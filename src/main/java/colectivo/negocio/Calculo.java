@@ -1,12 +1,9 @@
 package colectivo.negocio;
-
-import java.security.KeyStore.Entry;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
@@ -25,11 +22,13 @@ import colectivo.util.Util;
  */
 public class Calculo {
 
+    private static final org.apache.logging.log4j.Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger(Calculo.class.getName());
     private Map<String, Object> datosEnMemoria;
     public Calculo(){}
     public Calculo(Map<String, Object> datosEnMemoria){
         this();
         this.datosEnMemoria = datosEnMemoria;
+        LOGGER.info("Datos en memoria inicializados.");
     }
 
     private Map<String, Tramo> getTramos() {
@@ -121,6 +120,11 @@ public class Calculo {
                                     tramos, 
                                     listaRecorridos);
         }
+        if(listaRecorridos.isEmpty()){
+            LOGGER.info("No se encontraron recorridos entre las paradas indicadas.");
+        } else {
+            LOGGER.info("Total de recorridos encontrados: " + listaRecorridos.size());
+        }
         return listaRecorridos;
     }
 
@@ -142,7 +146,6 @@ public class Calculo {
         Map<String, Tramo> tramos,
         List<List<Recorrido>> resultados) {
         boolean recorridoEncontrado = false;
-
         for (Linea primeraLinea : origen.getLineas()) {
             int indexOrigen = primeraLinea.getParadas().indexOf(origen);
             List<Parada> paradasLinea1 = primeraLinea.getParadas().subList(indexOrigen + 1, primeraLinea.getParadas().size());
@@ -200,7 +203,6 @@ public class Calculo {
 
             }
         }
-
         return recorridoEncontrado;
     }
 

@@ -1,4 +1,4 @@
-package colectivo.interfaz.impl;
+package colectivo.ui.impl.consola;
 
 import java.time.LocalTime;
 import java.util.InputMismatchException;
@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Scanner;
 
 import colectivo.controlador.CoordinadorApp;
-import colectivo.interfaz.Interfaz;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
+import colectivo.ui.Interfaz;
 import colectivo.util.Tiempo;
 
 public class InterfazConsola implements Interfaz {
@@ -52,7 +52,6 @@ public class InterfazConsola implements Interfaz {
      */
     public Parada ingresarParadaOrigen(Map<Integer, Parada> paradas) {
         if(debug)return paradas.get(origen);
-
         System.out.println("=== SELECCIÓN DE PARADA ORIGEN ===");
         mostrarParadasDisponibles(paradas);
 

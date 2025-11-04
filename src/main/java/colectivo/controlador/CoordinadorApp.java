@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import colectivo.configuracion.ConfiguracionGlobal;
+import colectivo.constantes.Constantes;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
@@ -166,5 +167,10 @@ public class CoordinadorApp {
         if (config == null)
             config = ConfiguracionGlobal.geConfiguracionGlobal();
         config.setPersistenciaTipo(tipoPersistencia);
+    }
+    public String getIdiomaActual() {
+        if (config == null)
+            config = ConfiguracionGlobal.geConfiguracionGlobal();
+        return config.getIdiomaActual();
     }
 }

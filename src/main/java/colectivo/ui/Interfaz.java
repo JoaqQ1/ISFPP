@@ -1,6 +1,6 @@
-package colectivo.interfaz;
+package colectivo.ui;
 
-import colectivo.coordinador.Coordinable;
+import colectivo.controlador.Coordinable;
 
 public interface Interfaz extends Coordinable{
     void iniciar();

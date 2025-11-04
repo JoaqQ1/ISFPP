@@ -1,4 +1,4 @@
-package colectivo.interfaz.impl.gui;
+package colectivo.ui.impl.javafx;
 
 import java.net.URL;
 import java.time.LocalTime;
@@ -9,18 +9,22 @@ import java.util.Map;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import javax.swing.SwingUtilities;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.input.PanMouseInputListener;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
 
-import colectivo.controlador.Constantes;
+import colectivo.constantes.Constantes;
+import colectivo.controlador.Coordinable;
 import colectivo.controlador.CoordinadorApp;
-import colectivo.coordinador.Coordinable;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
 import colectivo.util.Tiempo;
@@ -34,6 +38,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -48,6 +53,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import javax.swing.SwingUtilities;
+import javafx.scene.control.TextArea;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
  * Controlador principal de la interfaz gráfica de usuario (GUI) de la aplicación de colectivos.
@@ -98,6 +107,7 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML private Menu menuConfig;
     @FXML private Menu menuConfigIdioma;
     @FXML private MenuItem menuConfigSalir;
+    @FXML private MenuItem menuInfoVerLogs;
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="2. Private Fields">
@@ -107,6 +117,8 @@ public class InterfazController implements Initializable, Coordinable {
     private ResourceBundle rb;
     private Task<List<List<Recorrido>>> currentTask;
     private static final Random generator = new Random();
+
+    private static final Logger LOGGER = LogManager.getLogger(InterfazController.class.getName());
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="3. Initialization and Lifecycle">
@@ -130,6 +142,7 @@ public class InterfazController implements Initializable, Coordinable {
 
         // Inicializa el contenido del mapa Swing
         createAndSetSwingContent(swingNodeMapa);
+        LOGGER.info("Controlador de interfaz inicializado correctamente.");
     }
 
     /**
@@ -145,6 +158,7 @@ public class InterfazController implements Initializable, Coordinable {
         // Ahora que el coordinador existe, cargamos la interfaz.
         // Esto evita un NullPointerException si se llamara desde initialize().
         cargarInterfaz();
+        LOGGER.info("Coordinador inyectado correctamente.");
     }
 
     /**
@@ -154,7 +168,7 @@ public class InterfazController implements Initializable, Coordinable {
      */
     public void cargarInterfaz() {
         if (coordinador == null) {
-            System.err.println("Coordinador no inicializado. No se pudo cargar la información.");
+            LOGGER.error("Coordinador no inicializado. No se pudo cargar la información.");
             return;
         }
         rb = coordinador.getResourceBundle();
@@ -190,6 +204,8 @@ public class InterfazController implements Initializable, Coordinable {
         };
         cbxOrigen.setConverter(paradaConverter);
         cbxDestino.setConverter(paradaConverter);
+
+        LOGGER.info("Interfaz cargada con datos iniciales.");
     }
     //</editor-fold>
 
@@ -205,7 +221,7 @@ public class InterfazController implements Initializable, Coordinable {
         if (coordinador == null || !sanitizarDatosEntrada()) {
             return; 
         }
-
+        LOGGER.info("El usuario inició el cálculo de recorrido.");
         // 1. Obtener valores (rápido, en el FX-Thread)
         final Parada origen = cbxOrigen.getValue();
         final Parada destino = cbxDestino.getValue();
@@ -241,7 +257,7 @@ public class InterfazController implements Initializable, Coordinable {
                 if (isCancelled()) {
                     return null;
                 }
-
+                LOGGER.info("Cálculo de recorrido iniciado.");
                 // ¡La llamada pesada!
                 return coordinador.calcularRecorrido(origen, destino, dia, horaLlegadaParada);
             }
@@ -255,6 +271,7 @@ public class InterfazController implements Initializable, Coordinable {
             List<List<Recorrido>> listaDeRecorridos = currentTask.getValue();
             if (listaDeRecorridos != null) {
                 mostrarRecorridos(listaDeRecorridos, horaLlegadaParada);
+                LOGGER.info("Cálculo de recorrido finalizado con éxito.");
             }
             
             restaurarUIAposCalculo(); // Ocultar spinner, restaurar botones/inputs
@@ -265,11 +282,12 @@ public class InterfazController implements Initializable, Coordinable {
             currentTask.getException().printStackTrace();
             mostrarAlerta("alert.title.calc_error", "alert.calc_error_body");
             restaurarUIAposCalculo();
+            LOGGER.error("Error durante el cálculo de recorrido: " + currentTask.getException().getMessage());
         });
 
         currentTask.setOnCancelled(event -> {
             pause.stop();
-            System.out.println("Cálculo cancelado por el usuario.");
+            LOGGER.info("Cálculo de recorrido cancelado por el usuario.");
             restaurarUIAposCalculo();
         });
 
@@ -298,6 +316,7 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML
     private void handleLimpiarInterfaz() {
         limpiarInterfaz();
+        LOGGER.info("Interfaz limpiada por el usuario.");
     }
 
     /**
@@ -310,6 +329,7 @@ public class InterfazController implements Initializable, Coordinable {
             int zoom = mapViewer.getZoom();
             mapViewer.setZoom(Math.max(zoom - 1, 1));
         }
+        LOGGER.info("Zoom In aplicado al mapa.");
     }
 
     /**
@@ -322,6 +342,7 @@ public class InterfazController implements Initializable, Coordinable {
             int zoom = mapViewer.getZoom();
             mapViewer.setZoom(Math.min(zoom + 1, 19));
         }
+        LOGGER.info("Zoom Out aplicado al mapa.");
     }
 
     /**
@@ -336,6 +357,7 @@ public class InterfazController implements Initializable, Coordinable {
         } else if (menuIdiomaEn.isSelected()) {
             coordinador.setIdioma(Constantes.IDIOMA_EN);
         }
+        LOGGER.info("Idioma cambiado a: " + coordinador.getIdiomaActual());
         actualizarIdioma();
     }
 
@@ -347,6 +369,90 @@ public class InterfazController implements Initializable, Coordinable {
     private void handleSalir(ActionEvent event) {
         Platform.exit();
         System.exit(0);
+        LOGGER.info("Aplicación cerrada por el usuario.");
+    }
+
+    /**
+     * Maneja la acción de "Ver Logs".
+     * Abre una nueva ventana y carga el contenido del archivo de log
+     * de forma asíncrona.
+     * @param event El evento de acción (no se utiliza).
+     */
+    @FXML
+    private void handleVerLogs(ActionEvent event) {
+        LOGGER.info("Usuario solicitó ver los logs.");
+    
+        // --- 1. Crear los componentes de la nueva ventana ---
+        StackPane layout = new StackPane();
+        layout.setPadding(new Insets(10));
+
+        TextArea logTextArea = new TextArea();
+        logTextArea.setEditable(false);
+        // Usar una fuente monoespaciada es mejor para logs
+        logTextArea.setStyle("-fx-font-family: 'Consolas', 'Monospaced', monospace;");
+
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setMaxSize(100, 100);
+
+        layout.getChildren().addAll(logTextArea, spinner);
+
+        // --- 2. Definir la Tarea Asíncrona para leer el archivo ---
+        // (Usamos el mismo patrón que ya usas para handleCalcularRecorrido)
+        Task<String> loadLogsTask = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                try {
+                    // 1. Obtener la ruta "home" del usuario
+                    String userHome = System.getProperty("user.home");
+                    
+                    // 2. Construir la misma ruta absoluta que Log4j
+                    Path logPath = Paths.get(userHome, ".colectivo-logs", "mi_app.log");
+                    
+                    // 3. Leer el archivo
+                    return Files.readString(logPath);
+                } catch (java.io.IOException e) {
+                    LOGGER.error("No se pudo leer el archivo de log 'logs/mi_app.log'.", e);
+                    // Pasa la excepción al onFailed
+                    throw e; 
+                }
+            }
+        };
+
+        // --- 3. Definir Callbacks (se ejecutan en el Hilo de JavaFX) ---
+
+        loadLogsTask.setOnRunning(e -> {
+            logTextArea.setText(rb.getString("log.loading")); // "Cargando logs..."
+            spinner.setVisible(true);
+        });
+
+        loadLogsTask.setOnSucceeded(e -> {
+            spinner.setVisible(false);
+            logTextArea.setText(loadLogsTask.getValue());
+            // Mover el scroll al final para ver lo más reciente
+            logTextArea.positionCaret(logTextArea.getLength()); 
+        });
+
+        loadLogsTask.setOnFailed(e -> {
+            spinner.setVisible(false);
+            String errorMsg = rb.getString("log.load_error"); // "Error al cargar logs"
+            logTextArea.setText(errorMsg + "\n\n" + loadLogsTask.getException().getMessage());
+        });
+
+        // --- 4. Crear y mostrar la nueva ventana (Stage) ---
+        Stage logStage = new Stage();
+        logStage.setTitle(rb.getString("log.window_title")); // "Visor de Logs"
+        // No bloquea la ventana principal
+        logStage.initModality(Modality.NONE); 
+
+        // Usamos el botón para obtener la escena, ya que sabemos que existe
+        logStage.initOwner(btnMostrarRecorrido.getScene().getWindow());
+
+        Scene scene = new Scene(layout, 700, 500); // Tamaño (ancho, alto)
+        logStage.setScene(scene);
+        logStage.show();
+
+        // --- 5. Iniciar la tarea en un hilo nuevo ---
+        new Thread(loadLogsTask).start();
     }
     //</editor-fold>
 
@@ -460,10 +566,14 @@ public class InterfazController implements Initializable, Coordinable {
                 -fx-background-radius: 8;
                 -fx-padding: 8 16;
             """);
-            btnVerRecorrido.setOnAction(e -> dibujarRecorrido(recorridos));
+            btnVerRecorrido.setOnAction(e -> {
+                LOGGER.info("Usuario solicitó ver recorrido en el mapa.");
+                dibujarRecorrido(recorridos);
+            });
 
             cardViaje.getChildren().addAll(lblTituloCard, contenedorTramos, cardResumen, btnVerRecorrido);
             contenedorRecorridos.getChildren().add(cardViaje);
+            LOGGER.info("Recorrido mostrado en la interfaz.");
         }
     }
 
@@ -505,12 +615,13 @@ public class InterfazController implements Initializable, Coordinable {
      */
     public void actualizarIdioma() {
         if (coordinador == null || coordinador.getResourceBundle() == null) {
-            System.err.println("⚠️ No se pudo actualizar el idioma: coordinador o configuración nulos");
+            LOGGER.error("⚠️ No se pudo actualizar el idioma: coordinador o configuración nulos");
             return;
         }
         rb = coordinador.getResourceBundle();
+        limpiarInterfaz();
         actualizarTextosUI(rb);
-        contenedorRecorridos.getChildren().clear();
+        LOGGER.info("Interfaz actualizada al idioma: " + coordinador.getIdiomaActual());
     }
 
     /**
@@ -572,6 +683,7 @@ public class InterfazController implements Initializable, Coordinable {
      */
     private void limpiarInterfaz() {
         contenedorRecorridos.getChildren().clear();
+        // Asigna null para que se muestre el prompt text
         cbxDia.getSelectionModel().clearSelection();
         cbxOrigen.getSelectionModel().clearSelection();
         cbxDestino.getSelectionModel().clearSelection();
@@ -614,6 +726,7 @@ public class InterfazController implements Initializable, Coordinable {
 
         cardSinResultados.getChildren().addAll(lblMensaje, lblSugerencia);
         contenedorDeRecorridos.getChildren().add(cardSinResultados);
+        LOGGER.info("Se mostró el mensaje de 'sin resultados' en la interfaz.");
     }
 
     /**
@@ -627,6 +740,7 @@ public class InterfazController implements Initializable, Coordinable {
         alert.setHeaderText(null);
         alert.setContentText(rb.getString(mensaje));
         alert.showAndWait();
+        LOGGER.error("Se mostró una alerta: " + rb.getString(titulo));
     }
     //</editor-fold>
 
@@ -703,6 +817,7 @@ public class InterfazController implements Initializable, Coordinable {
 
             swingNode.setContent(mapViewer);
         });
+        LOGGER.info("Mapa SwingNode inicializado correctamente.");
     }
 
     /**

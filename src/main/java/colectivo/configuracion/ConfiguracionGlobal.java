@@ -40,11 +40,11 @@ public class ConfiguracionGlobal {
 		return resourceBundle;
 	}
     public String getPersistenciaTipo() {
-        return propiedades.getProperty("persistencia.tipo", "ARCHIVOS");
+        return propiedades.getProperty("persistencia.tipo");
     }
 
     public String getNombreAplicacion() {
-        return propiedades.getProperty("app.nombre", "SistemaDeColectivos");
+        return propiedades.getProperty("app.nombre");
     }
     public String getIdiomaActual(){
         return propiedades.getProperty("idioma.actual");

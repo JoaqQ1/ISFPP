@@ -3,6 +3,7 @@ package colectivo.modelo;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Linea {
 
@@ -33,6 +34,14 @@ public class Linea {
 		frecuencias.add(new Frecuencia(diaSemana, hora));
 	}
 
+	public void agregarFrecuencias(Map<Integer, List<LocalTime>> map) {
+		for(Integer dia : map.keySet()) {
+			List<LocalTime> horas = map.get(dia);
+			for(LocalTime hora : horas) {
+				frecuencias.add(new Frecuencia(dia, hora));
+			}
+		}	
+	}
 	public List<LocalTime> getFrecuencias(int dia){
 		List<LocalTime> horarios = new ArrayList<LocalTime>();
 		if(dia > 7 || dia < 0) return horarios;

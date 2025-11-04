@@ -1,4 +1,4 @@
-package colectivo.interfaz.impl.gui;
+package colectivo.ui.impl.javafx;
 
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.painter.Painter;

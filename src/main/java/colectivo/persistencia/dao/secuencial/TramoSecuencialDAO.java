@@ -1,4 +1,4 @@
-package colectivo.dao.secuencial;
+package colectivo.persistencia.dao.secuencial;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,26 +10,29 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.TreeMap;
 
-import colectivo.conexion.Factory;
-import colectivo.controlador.Constantes;
-import colectivo.dao.ParadaDAO;
-import colectivo.dao.TramoDAO;
+import colectivo.configuracion.Factory;
+import colectivo.constantes.Constantes;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Tramo;
+import colectivo.persistencia.dao.ParadaDAO;
+import colectivo.persistencia.dao.TramoDAO;
 import colectivo.util.Util;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TramoSecuencialDAO implements TramoDAO {
 
+    private static final Logger LOGGER = LogManager.getLogger(TramoSecuencialDAO.class.getName());
     private Map<String, Tramo> tramos;
-    // private ParadaDAO paradasDAO;
     private String name;
     private boolean actualizar;
 
     public TramoSecuencialDAO() {
         // Leemos el nombre del archivo desde secuencial.properties
-        ResourceBundle rb = ResourceBundle.getBundle("secuencial");
+        ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
         name = rb.getString("tramo");
-        // paradasDAO = new ParadaSecuencialDAO();
+        LOGGER.info("TramoSecuencialDAO inicializado con archivo: " + name);
     }
 
     public Map<String, Tramo> buscarTodos() {
@@ -37,6 +40,7 @@ public class TramoSecuencialDAO implements TramoDAO {
             tramos = readFromFile(name);
             actualizar = false;
         }
+        LOGGER.info("Tramos cargados desde archivo: " + name);
         return tramos;
     }
 
@@ -71,7 +75,7 @@ public class TramoSecuencialDAO implements TramoDAO {
     private Map<String, Tramo> readFromFile(String file) {
         Map<String, Tramo> map = new TreeMap<>();
         Scanner inFile = null;
-        Map<Integer,Parada> paradas = ((ParadaDAO) Factory.getInstancia(Constantes.PARADA)).buscarTodos();
+        Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
 
         try {
             inFile = new Scanner(new File("src/main/resources/" + file));
@@ -89,15 +93,13 @@ public class TramoSecuencialDAO implements TramoDAO {
                 
                 map.put(Util.claveTramo(inicio, fin), tramo);
             }
-
+            LOGGER.info("Tramos cargados desde archivo: " + file);
         } catch (FileNotFoundException e) {
-            System.err.println("Error: archivo no encontrado -> " + file);
+            LOGGER.error("Error: archivo no encontrado -> " + file, e);
         } catch (NoSuchElementException e) {
-            System.err.println("Error en la estructura del archivo de tramos.");
-            e.printStackTrace();
+            LOGGER.error("Error en la estructura del archivo de tramos.", e);
         } catch (IllegalStateException e) {
-            System.err.println("Error leyendo el archivo de tramos.");
-            e.printStackTrace();
+            LOGGER.error("Error leyendo el archivo de tramos.", e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -124,9 +126,9 @@ public class TramoSecuencialDAO implements TramoDAO {
                         t.getTipo());
             }
         } catch (FileNotFoundException e) {
-            System.err.println("Error creando archivo de tramos.");
+            LOGGER.error("Error creando archivo de tramos.", e);
         } catch (FormatterClosedException e) {
-            System.err.println("Error escribiendo archivo de tramos.");
+            LOGGER.error("Error escribiendo archivo de tramos.", e);
         } finally {
             if (outFile != null)
                 outFile.close();

@@ -2,8 +2,8 @@ package colectivo.negocio;
 
 import java.util.Map;
 
+import colectivo.controlador.Coordinable;
 import colectivo.controlador.CoordinadorApp;
-import colectivo.coordinador.Coordinable;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Tramo;
