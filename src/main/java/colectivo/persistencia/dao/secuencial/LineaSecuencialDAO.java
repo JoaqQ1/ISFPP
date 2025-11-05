@@ -111,9 +111,9 @@ public class LineaSecuencialDAO implements LineaDAO {
             LOGGER.info("Frecuencias agregadas desde archivo: " + archivoFrecuencias);
 
         } catch (FileNotFoundException e) {
-            LOGGER.error("Archivo no encontrado: " + archivoLineas, e);
+            LOGGER.error("readFromFile: Archivo no encontrado: " + archivoLineas, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("Error en la estructura del archivo de líneas.", e);
+            LOGGER.error("readFromFile: Error en la estructura del archivo de líneas.", e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -144,7 +144,7 @@ public class LineaSecuencialDAO implements LineaDAO {
             }
 
         } catch (FileNotFoundException e) {
-            LOGGER.error("Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
+            LOGGER.error("agregarFrecuencias: Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -179,9 +179,9 @@ public class LineaSecuencialDAO implements LineaDAO {
             }
 
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error al crear archivo de líneas o frecuencias.", e);
+            LOGGER.error("writeToFile: Error al crear archivo de líneas o frecuencias.", e);
         } catch (FormatterClosedException e) {
-            LOGGER.error("Error al escribir en los archivos.", e);
+            LOGGER.error("writeToFile: Error al escribir en los archivos.", e);
         } finally {
             if (outLineas != null) outLineas.close();
             if (outFrecuencias != null) outFrecuencias.close();

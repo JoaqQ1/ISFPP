@@ -83,12 +83,12 @@ public class ParadaSecuencialDAO implements ParadaDAO {
             }
             LOGGER.info("Paradas cargadas desde archivo: " + file);
         } catch (FileNotFoundException e) {
-            
-            LOGGER.error("Error opening file: " + file, e);
+
+            LOGGER.error("readFromFile: Error opening file: " + file, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("Error in file record structure", e);
+            LOGGER.error("readFromFile: Error in file record structure", e);
         } catch (IllegalStateException e) {
-            LOGGER.error("Error reading from file", e);
+            LOGGER.error("readFromFile: Error reading from file", e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -109,9 +109,9 @@ public class ParadaSecuencialDAO implements ParadaDAO {
                         p.getLongitud());
             }
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error creating file.", e);
+            LOGGER.error("writeToFile: Error creating file.", e);
         } catch (FormatterClosedException e) {
-            LOGGER.error("Error writing to file.", e);
+            LOGGER.error("writeToFile: Error writing to file.", e);
         } finally {
             if (outFile != null)
                 outFile.close();

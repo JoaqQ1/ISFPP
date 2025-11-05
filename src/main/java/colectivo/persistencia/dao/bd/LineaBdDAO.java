@@ -106,7 +106,7 @@ public class LineaBdDAO implements LineaDAO{
 			LOGGER.info("Paradas cargadas desde base de datos.");
 			return paradasMap;
 		} catch (SQLException e) {
-			LOGGER.error("Error cargando paradas desde base de datos.", e);
+			LOGGER.error("cargarParadas: Error cargando paradas desde base de datos.", e);
 		}
 		return null;
 	}
@@ -125,7 +125,7 @@ public class LineaBdDAO implements LineaDAO{
 			}
 			LOGGER.info("Lineas cargadas desde base de datos.");
 		} catch (SQLException e) {
-			LOGGER.error("Error cargando lineas desde base de datos.", e);
+			LOGGER.error("cargarLineas: Error cargando lineas desde base de datos.", e);
 		}
 		return lineasBd;
 	}
@@ -148,7 +148,7 @@ public class LineaBdDAO implements LineaDAO{
 			LOGGER.info("Frecuencias cargadas desde base de datos.");
 			return frecuenciasMap;
 		} catch (SQLException e) {
-			LOGGER.error("Error cargando frecuencias desde base de datos.", e);
+			LOGGER.error("cargarFrecuencias: Error cargando frecuencias desde base de datos.", e);
 		}
 		return null;
 	}

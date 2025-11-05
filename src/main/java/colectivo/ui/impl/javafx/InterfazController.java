@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -197,7 +198,7 @@ public class InterfazController implements Initializable, Coordinable {
      */
     public void cargarInterfaz() {
         if (coordinador == null) {
-            LOGGER.error("Coordinador no inicializado. No se pudo cargar la información.");
+            LOGGER.error("cargarInterfaz: Coordinador no inicializado. No se pudo cargar la información.");
             return;
         }
         rb = coordinador.getResourceBundle();
@@ -253,11 +254,11 @@ public class InterfazController implements Initializable, Coordinable {
         LOGGER.info("El usuario inició el cálculo de recorrido.");
 
         if (coordinador == null) {
-            LOGGER.error("Coordinador no inicializado. No se puede calcular el recorrido.");
+            LOGGER.error("handleCalcularRecorrido:Coordinador no inicializado. No se puede calcular el recorrido.");
             return; 
         }
         if(!sanitizarDatosEntrada()){
-            LOGGER.error("Datos de entrada no válidos.");
+            LOGGER.error("handleCalcularRecorrido:Datos de entrada no válidos.");
             return;
         }
         // 1. Obtener valores (rápido, en el FX-Thread)
@@ -322,7 +323,7 @@ public class InterfazController implements Initializable, Coordinable {
             currentTask.getException().printStackTrace();
             mostrarAlerta("alert.title.calc_error", "alert.calc_error_body");
             restaurarUIAposCalculo();
-            LOGGER.error("Error durante el cálculo de recorrido: " + currentTask.getException().getMessage());
+            LOGGER.error("handleCalcularRecorrido: Error durante el cálculo de recorrido: " + currentTask.getException().getMessage());
         });
 
         currentTask.setOnCancelled(event -> {
@@ -451,7 +452,7 @@ public class InterfazController implements Initializable, Coordinable {
                     // 3. Leer el archivo
                     return Files.readString(logPath);
                 } catch (java.io.IOException e) {
-                    LOGGER.error("No se pudo leer el archivo de log 'logs/mi_app.log'.", e);
+                    LOGGER.error("handleVerLogs: No se pudo leer el archivo de log 'logs/mi_app.log'.", e);
                     // Pasa la excepción al onFailed
                     throw e; 
                 }
@@ -515,8 +516,18 @@ public class InterfazController implements Initializable, Coordinable {
     private void mostrarRecorridos(List<List<Recorrido>> listaDeRecorridos, LocalTime horaLlegaParada) {
         
         contenedorRecorridos.getChildren().clear();
-
-        if (listaDeRecorridos == null || listaDeRecorridos.isEmpty()) {
+        if(horaLlegaParada == null) {
+            LOGGER.error("mostrarRecorridos: La hora de llegada a la parada es nula.");
+            mostrarCardSinResultados(contenedorRecorridos);
+            return;
+        }
+        if(listaDeRecorridos == null) {
+            LOGGER.error("mostrarRecorridos: La lista de recorridos es nula.");
+            mostrarCardSinResultados(contenedorRecorridos);
+            return;
+        }
+        if (listaDeRecorridos.isEmpty()) {
+            LOGGER.info("No se encontraron recorridos para los parámetros dados.");
             mostrarCardSinResultados(contenedorRecorridos);
             return;
         }
@@ -630,6 +641,12 @@ public class InterfazController implements Initializable, Coordinable {
      * @param cargando true para mostrar el spinner y deshabilitar inputs, false para lo contrario.
      */
     private void prepararCarga(boolean cargando) {
+        if(cargando) {
+            LOGGER.debug("prepararCarga: Preparando UI para carga: mostrando spinner y deshabilitando inputs.");
+        } else {
+            LOGGER.debug("prepararCarga: Restaurando UI después de carga: ocultando spinner y habilitando inputs.");
+        }
+
         spinnerLoading.setVisible(cargando);
         contenedorRecorridos.setVisible(!cargando);
 
@@ -660,8 +677,8 @@ public class InterfazController implements Initializable, Coordinable {
      * Se llama al cargar la interfaz y al cambiar de idioma.
      */
     public void actualizarIdioma() {
-        if (coordinador == null || coordinador.getResourceBundle() == null) {
-            LOGGER.error("⚠️ No se pudo actualizar el idioma: coordinador o configuración nulos");
+        if (coordinador == null) {
+            LOGGER.error("actualizarIdioma: No se pudo actualizar el idioma: coordinador nulo");
             return;
         }
         rb = coordinador.getResourceBundle();
@@ -675,6 +692,12 @@ public class InterfazController implements Initializable, Coordinable {
      * @param bundle El ResourceBundle del idioma seleccionado.
      */
     private void actualizarTextosUI(ResourceBundle bundle) {
+
+        if(bundle == null) {
+            LOGGER.error("actualizarTextosUI: ResourceBundle nulo. No se pueden actualizar los textos de la UI.");
+            return;
+        }
+
         // Labels principales
         lblTitulo.setText(bundle.getString("app.title"));
         lblDia.setText(bundle.getString("label.day") + ":");
@@ -817,7 +840,7 @@ public class InterfazController implements Initializable, Coordinable {
         alert.setHeaderText(null);
         alert.setContentText(rb.getString(mensaje));
         alert.showAndWait();
-        LOGGER.error("Se mostró una alerta: " + rb.getString(titulo));
+        LOGGER.info("Se mostró una alerta: " + rb.getString(titulo));
     }
     //</editor-fold>
 
@@ -920,74 +943,98 @@ public class InterfazController implements Initializable, Coordinable {
     //</editor-fold>
 
     /**
-     * [DEBUG] Dibuja *todas* las paradas conocidas por el coordinador,
-     * coloreando cada línea con un color distinto.
+     * [DEBUG] Dibuja *todas* las paradas conocidas por el coordinador
+     * en un hilo de fondo (Task) para no bloquear la UI.
+     * <p>Colorea cada línea con un color distinto.</p>
      * <p>Las paradas que no pertenecen a ninguna línea se verán en GRIS.</p>
      */
     public void debugDibujarTodasLasParadas() {
         if (coordinador == null) {
-            LOGGER.warn("Debug: Coordinador nulo, no se pueden dibujar paradas.");
+            LOGGER.warn("debugDibujarTodasLasParadas: Coordinador nulo, no se pueden dibujar paradas.");
             return;
         }
         if (mapViewer == null) {
-            LOGGER.warn("Debug: MapViewer nulo, no se pueden dibujar paradas.");
+            LOGGER.warn("debugDibujarTodasLasParadas: MapViewer nulo, no se pueden dibujar paradas.");
             return;
         }
 
-        LOGGER.info("Iniciando dibujado de debug: coloreando paradas por línea.");
+        LOGGER.info("Iniciando TAREA de dibujado de las paradas en hilo de fondo.");
 
-        // 1. Lista para guardar todos los painters (uno por cada capa)
-        List<Painter<JXMapViewer>> painters = new ArrayList<>();
-
-        // 2. CAPA BASE: Dibujamos TODAS las paradas primero en color GRIS.
-        // Usamos un Set para que no haya duplicados
-        Set<GeoPosition> todasLasParadasGeo = new HashSet<>();
-        for (Parada p : coordinador.listarParadas().values()) {
-            todasLasParadasGeo.add(new GeoPosition(p.getLatitud(), p.getLongitud()));
-        }
-        
-        // Creamos un painter base con todas las paradas en gris
-        ParadasDebugPainter painterBase = new ParadasDebugPainter(
-            todasLasParadasGeo, 
-            java.awt.Color.GRAY
-        );
-        painters.add(painterBase);
-
-
-        // 3. CAPAS DE LÍNEA: Iteramos por cada línea, como sugeriste
-        for (Linea linea : coordinador.listarLineas().values()) {
+        // 1. Crear la Tarea (Task)
+        // Esta tarea devolverá el CompoundPainter ya listo.
+        Task<Painter<JXMapViewer>> task = new Task<Painter<JXMapViewer>>() {
             
-            // 4. Obtenemos las paradas de ESTA línea
-            Collection<GeoPosition> paradasDeLinea = new ArrayList<>();
-            if (linea.getParadas() != null) {
-                for (Parada p : linea.getParadas()) {
-                    paradasDeLinea.add(new GeoPosition(p.getLatitud(), p.getLongitud()));
-                }
-            }
-
-            if (!paradasDeLinea.isEmpty()) {
-                // 5. Generamos un color aleatorio para esta línea
-                java.awt.Color colorLinea = java.awt.Color.decode(generarColorAleatorio());
-
-                // 6. Creamos un painter específico para esta línea con su color
-                ParadasDebugPainter painterLinea = new ParadasDebugPainter(
-                    paradasDeLinea, 
-                    colorLinea
-                );
+            @Override
+            protected Painter<JXMapViewer> call() throws Exception {
                 
-                // 7. Lo agregamos a la lista
-                // (Se dibujará "encima" de la capa base gris)
-                painters.add(painterLinea);
+                // --- INICIO DEL HILO DE FONDO ---
+                // (Todo este código se ejecuta fuera del hilo de la UI)
+
+                // 1. Lista para guardar todos los painters (uno por cada capa)
+                List<Painter<JXMapViewer>> painters = new ArrayList<>();
+
+                // 2. CAPA BASE: Dibujamos TODAS las paradas primero en color GRIS.
+                Set<GeoPosition> todasLasParadasGeo = new HashSet<>();
+                for (Parada p : coordinador.listarParadas().values()) {
+                    todasLasParadasGeo.add(new GeoPosition(p.getLatitud(), p.getLongitud()));
+                }
+                
+                ParadasDebugPainter painterBase = new ParadasDebugPainter(
+                    todasLasParadasGeo, 
+                    java.awt.Color.GRAY
+                );
+                painters.add(painterBase);
+
+                // 3. CAPAS DE LÍNEA: Iteramos por cada línea
+                for (Linea linea : coordinador.listarLineas().values()) {
+                    
+                    Collection<GeoPosition> paradasDeLinea = new ArrayList<>();
+                    if (linea.getParadas() != null) {
+                        for (Parada p : linea.getParadas()) {
+                            paradasDeLinea.add(new GeoPosition(p.getLatitud(), p.getLongitud()));
+                        }
+                    }
+
+                    if (!paradasDeLinea.isEmpty()) {
+                        java.awt.Color colorLinea = java.awt.Color.decode(generarColorAleatorio());
+                        ParadasDebugPainter painterLinea = new ParadasDebugPainter(
+                            paradasDeLinea, 
+                            colorLinea
+                        );
+                        painters.add(painterLinea);
+                    }
+                }
+
+                LOGGER.info("Tarea de debug: {} painters (1 base + {} líneas) creados en hilo de fondo.",
+                        painters.size(), painters.size() - 1);
+
+                // 8. Creamos el CompoundPainter
+                // Este es el resultado que devolverá la tarea
+                return new CompoundPainter<>(painters);
+                
+                // --- FIN DEL HILO DE FONDO ---
             }
-        }
+        };
 
-        // 8. Creamos un CompoundPainter que combine todos los painters de la lista
-        CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(painters);
+        // 2. Definir qué hacer cuando la tarea termine con ÉXITO
+        // (Esto se ejecuta automáticamente en el Hilo de la UI)
+        task.setOnSucceeded(e -> {
+            // Obtenemos el resultado (el CompoundPainter) de la tarea
+            Painter<JXMapViewer> compoundPainter = task.getValue();
 
-        // 9. Asignamos el CompoundPainter al mapa
-        mapViewer.setOverlayPainter(compoundPainter);
-        LOGGER.info("Debug: {} painters (1 base + {} líneas) dibujados en el mapa.",
-                painters.size(), painters.size() - 1);
+            // 9. Asignamos el CompoundPainter al mapa (¡Seguro!)
+            mapViewer.setOverlayPainter(compoundPainter);
+            LOGGER.info("Tarea de debug completada. OverlayPainter actualizado.");
+        });
+
+        // 3. Definir qué hacer si la tarea FALLA
+        task.setOnFailed(e -> {
+            LOGGER.error("debugDibujarTodasLasParadas: La tarea de dibujado de debug falló.", task.getException());
+        });
+
+        // 4. Iniciar la tarea en un nuevo hilo
+        // (No llames a task.run(), eso lo haría en el hilo actual)
+        new Thread(task).start();
     }
     
     /**
@@ -1003,23 +1050,44 @@ public class InterfazController implements Initializable, Coordinable {
     private <T> void setupAutoComplete(ComboBox<T> comboBox, List<T> masterList, 
                                     Function<T, String> stringExtractor) {
         
+
+        if(comboBox == null){
+            LOGGER.error("setupAutoComplete: comboBox es nulo.");
+            return;
+        }
+        if(masterList == null){
+            LOGGER.error("setupAutoComplete: masterList es nulo.");
+            return;
+        }
+        if(masterList.isEmpty()){
+            LOGGER.warn("setupAutoComplete: masterList está vacía.");
+            return;
+        }
+        if(stringExtractor == null){
+            LOGGER.error("setupAutoComplete: stringExtractor es nulo.");
+            return;
+        }
+
         // 1. Establece la lista inicial
         comboBox.setItems(FXCollections.observableArrayList(masterList));
-
+        
         // 2. Listener para filtrar la lista mientras el usuario escribe
         comboBox.getEditor().setOnKeyReleased(event -> {
-            String typedText = comboBox.getEditor().getText();
+            String userInput = comboBox.getEditor().getText();
 
-            if (typedText == null || typedText.isEmpty()) {
+            String regexPattern = "^" + Pattern.quote(userInput) + ".*";
+
+            
+            if (userInput == null || userInput.isEmpty()) {
                 comboBox.setItems(FXCollections.observableArrayList(masterList));
                 comboBox.hide(); 
             } else {
+                Pattern pattern = Pattern.compile(regexPattern, Pattern.CASE_INSENSITIVE);
                 // Filtra la lista maestra usando el extractor genérico
                 List<T> filteredList = masterList.stream()
                         .filter(item -> 
                             // Aquí usamos la función que pasamos como parámetro
-                            stringExtractor.apply(item).toLowerCase()
-                                            .contains(typedText.toLowerCase())
+                            pattern.matcher(stringExtractor.apply(item).toLowerCase()).find()
                         )
                         .collect(Collectors.toList());
 
@@ -1052,11 +1120,6 @@ public class InterfazController implements Initializable, Coordinable {
             }
         });
 
-        // 4. Previene que la rueda del mouse cambie la selección
-        comboBox.addEventFilter(ScrollEvent.ANY, event -> {
-            if (!comboBox.isShowing()) {
-                event.consume();
-            }
-        });
+        
     }
 }

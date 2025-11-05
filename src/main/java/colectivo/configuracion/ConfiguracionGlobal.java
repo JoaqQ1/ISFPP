@@ -6,7 +6,14 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import colectivo.conexion.ConexionBD;
+
 public class ConfiguracionGlobal {
+    private static final Logger LOGGER = LogManager.getLogger(ConfiguracionGlobal.class.getName());
+
     private static ConfiguracionGlobal configuracion = null;
     private Properties propiedades;
     private ResourceBundle resourceBundle;
@@ -27,7 +34,9 @@ public class ConfiguracionGlobal {
             propiedades.load(input);
             Locale.setDefault(new Locale(propiedades.getProperty("language"), propiedades.getProperty("country")));
 			resourceBundle = ResourceBundle.getBundle(propiedades.getProperty("labels"));
+            LOGGER.info("<init>: Configuración cargada correctamente.");
         } catch (IOException e) {
+            LOGGER.error("<init>: Error cargando configuración", e);
             throw new RuntimeException("Error cargando configuración", e);
         }
     }
@@ -50,6 +59,9 @@ public class ConfiguracionGlobal {
         return propiedades.getProperty("idioma.actual");
     }
     public void setLocale(Locale locale) {
+        if(locale == null) {
+            locale = Locale.getDefault();
+        }
         this.currentLocale = locale;
         this.resourceBundle = ResourceBundle.getBundle("i18n.labels", locale);
     }

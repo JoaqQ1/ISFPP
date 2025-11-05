@@ -95,11 +95,11 @@ public class TramoSecuencialDAO implements TramoDAO {
             }
             LOGGER.info("Tramos cargados desde archivo: " + file);
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error: archivo no encontrado -> " + file, e);
+            LOGGER.error("readFromFile: Error: archivo no encontrado -> " + file, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("Error en la estructura del archivo de tramos.", e);
+            LOGGER.error("readFromFile: Error en la estructura del archivo de tramos.", e);
         } catch (IllegalStateException e) {
-            LOGGER.error("Error leyendo el archivo de tramos.", e);
+            LOGGER.error("readFromFile: Error leyendo el archivo de tramos.", e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -126,9 +126,9 @@ public class TramoSecuencialDAO implements TramoDAO {
                         t.getTipo());
             }
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error creando archivo de tramos.", e);
+            LOGGER.error("writeToFile: Error creando archivo de tramos.", e);
         } catch (FormatterClosedException e) {
-            LOGGER.error("Error escribiendo archivo de tramos.", e);
+            LOGGER.error("writeToFile: Error escribiendo archivo de tramos.", e);
         } finally {
             if (outFile != null)
                 outFile.close();

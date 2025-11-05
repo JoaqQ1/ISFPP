@@ -3,6 +3,9 @@ package colectivo.util;
 import java.time.Duration;
 import java.time.LocalTime;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import colectivo.modelo.Recorrido;
 
 /**
@@ -14,6 +17,7 @@ import colectivo.modelo.Recorrido;
  */
 public class Tiempo {
 
+    private static final Logger LOGGER = LogManager.getLogger(Tiempo.class.getName());
     /**
      * Convierte una cantidad total de segundos a un objeto {@link LocalTime}.
      * 
@@ -24,6 +28,7 @@ public class Tiempo {
      */
     public static LocalTime segundosATiempo(int totalSegundos) {
 
+        
         // Calcular horas
         int horas = totalSegundos / 3600;
         int segundosRestantes = totalSegundos % 3600;
@@ -48,7 +53,10 @@ public class Tiempo {
      */
     public static LocalTime calcularDuracionTotalViaje(Recorrido r, LocalTime horaLLegadaParada) {
 
-        if(r == null || horaLLegadaParada == null) return null;
+        if(r == null || horaLLegadaParada == null) {
+            LOGGER.error("calcularDuracionTotalViaje: Parámetros nulos proporcionados");
+            return null;
+        }
 
         // Hora en que llega el colectivo al destino
         LocalTime horaLlegada = r.getHoraSalida().plusSeconds(r.getDuracion());
@@ -75,6 +83,10 @@ public class Tiempo {
 
     // return r.getHoraSalida().plusSeconds(r.getDuracion());
     public static LocalTime calcularHoraLlegadaDestino(Recorrido r) {
+        if(r == null) {
+            LOGGER.error("calcularHoraLlegadaDestino: El recorrido no puede ser nulo");
+            return null;
+        }
         return r.getHoraSalida().plusSeconds(r.getDuracion());
     }
 }

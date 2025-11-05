@@ -40,7 +40,7 @@ public class Factory {
         // ¡Paso 2: Usar computeIfAbsent en el CACHÉ DE DAOs!
         return (LineaDAO) DAO_CACHE.computeIfAbsent(Constantes.LINEA, (key) -> {
             String tipo = ConfiguracionGlobal.geConfiguracionGlobal().getPersistenciaTipo();
-            LOGGER.info("Factory: Creando y cacheando instancia de LineaDAO para persistencia: " + tipo);
+            LOGGER.info("Creando y cacheando instancia de LineaDAO para persistencia: " + tipo);
             if (Constantes.BD.equalsIgnoreCase(tipo)) {
                 return new LineaBdDAO();
             } else {
@@ -59,7 +59,7 @@ public class Factory {
         // ¡Paso 2!
         return (ParadaDAO) DAO_CACHE.computeIfAbsent(Constantes.PARADA, (key) -> {
             String tipo = ConfiguracionGlobal.geConfiguracionGlobal().getPersistenciaTipo();
-            LOGGER.info("Factory: Creando y cacheando instancia de ParadaDAO para persistencia: " + tipo);
+            LOGGER.info("Creando y cacheando instancia de ParadaDAO para persistencia: " + tipo);
             if (Constantes.BD.equalsIgnoreCase(tipo)) {
                 return new ParadaBdDAO();
             } else {
@@ -78,7 +78,7 @@ public class Factory {
         // ¡Paso 2!
         return (TramoDAO) DAO_CACHE.computeIfAbsent(Constantes.TRAMO, (key) -> {
             String tipo = ConfiguracionGlobal.geConfiguracionGlobal().getPersistenciaTipo();
-            LOGGER.info("Factory: Creando y cacheando instancia de TramoDAO para persistencia: " + tipo);
+            LOGGER.info("Creando y cacheando instancia de TramoDAO para persistencia: " + tipo);
             if (Constantes.BD.equalsIgnoreCase(tipo)) {
                 return new TramoBdDAO();
             } else {
@@ -114,6 +114,10 @@ public class Factory {
     // Tu código de LineaSecuencialDAO llama a estos, así que los mantenemos.
 
     public static Object getInstancia(String objName) {
+        if(objName == null) {
+            LOGGER.error("getInstancia: Parámetro nulo proporcionado: objName=null");
+            throw new IllegalArgumentException("Parámetro nulo no permitido");
+        }
         // 1. Redirigir DAOs a los nuevos métodos (que ahora SÍ usan caché)
         if (Constantes.LINEA.equals(objName)) {
             return getLineaDAO();
@@ -130,6 +134,11 @@ public class Factory {
     }
 
     public static Object getInstancia(String objName, Class<?> type) {
+        if(objName == null || type == null) {
+            LOGGER.error("getInstancia: Parámetros nulos proporcionados: objName=" + objName + ", type=" + type);
+            throw new IllegalArgumentException("Parámetros nulos no permitidos");
+        }
+
         // 1. Redirigir DAOs
         if (Constantes.LINEA.equals(objName)) {
             return getLineaDAO();
@@ -146,16 +155,16 @@ public class Factory {
             Object instance = SERVICE_CACHE.computeIfAbsent(objName, Factory::createServiceInstance);
             
             if (instance == null) {
-                LOGGER.error("computeIfAbsent devolvió null para: " + objName);
+                LOGGER.error("getInstancia: computeIfAbsent devolvió null para: " + objName);
                 throw new RuntimeException("No se pudo crear la instancia para: " + objName);
             }
             if (!type.isAssignableFrom(instance.getClass())) {
-                LOGGER.warn("La instancia cacheada para " + objName + " no es del tipo " + type.getName());
+                LOGGER.warn("getInstancia: La instancia cacheada para " + objName + " no es del tipo " + type.getName());
                 throw new RuntimeException("Instancia incompatible con el tipo: " + objName);
             }
             return instance;
         } catch (Exception ex) {
-            LOGGER.error("Error al obtener la instancia de: " + objName, ex);
+            LOGGER.error("getInstancia: Error al obtener la instancia de: " + objName, ex);
             throw new RuntimeException(ex);
         }
     }
@@ -173,7 +182,7 @@ public class Factory {
             return Class.forName(className).getDeclaredConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
                 | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
-            LOGGER.error("Error al crear la instancia de: " + name, e);
+            LOGGER.error("createServiceInstance: Error al crear la instancia de: " + name, e);
             return null;
         }
     }

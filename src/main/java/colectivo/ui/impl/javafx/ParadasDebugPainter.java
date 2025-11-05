@@ -1,5 +1,7 @@
 package colectivo.ui.impl.javafx;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.painter.Painter;
 import org.jxmapviewer.viewer.GeoPosition;
@@ -16,6 +18,8 @@ import java.util.Collection;
  */
 public class ParadasDebugPainter implements Painter<JXMapViewer> {
 
+    private static final Logger LOGGER = LogManager.getLogger(ParadasDebugPainter.class.getName());
+
     private final Collection<GeoPosition> paradas;
     private final Color colorInterior; // <-- Color ahora es un parámetro
 
@@ -24,13 +28,32 @@ public class ParadasDebugPainter implements Painter<JXMapViewer> {
      * @param colorInterior El color de relleno para los puntos
      */
     public ParadasDebugPainter(Collection<GeoPosition> paradas, Color colorInterior) {
+        if(paradas == null || colorInterior == null) {
+            LOGGER.error(" Parámetros nulos proporcionados");
+            throw new IllegalArgumentException("Parámetros nulos no permitidos");
+        }
         this.paradas = paradas;
         this.colorInterior = colorInterior;
     }
 
     @Override
     public void paint(Graphics2D g, JXMapViewer map, int w, int h) {
-        if (paradas == null || paradas.isEmpty()) return;
+        if (paradas == null || paradas.isEmpty()){
+            LOGGER.warn("paint: No hay paradas para dibujar");
+            return;
+        }
+        if(g == null) {
+            LOGGER.warn("paint: El objeto Graphics2D es nulo");
+            return;
+        }
+        if(h == 0 || w == 0) {
+            LOGGER.warn("paint: Dimensiones del viewport no válidas");
+            return;
+        }
+        if(map == null){
+            LOGGER.warn("paint: El objeto JXMapViewer es nulo");
+            return;
+        }
 
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

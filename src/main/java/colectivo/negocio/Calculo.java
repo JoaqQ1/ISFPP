@@ -74,7 +74,7 @@ public class Calculo {
         // ? ========== Recorridos Directos ==========√ 
         List<List<Recorrido>> listaRecorridos = new ArrayList<>();
         if(!validarParametros(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, tramos)){
-            LOGGER.warn("Parámetros inválidos para el cálculo de recorridos.");
+            LOGGER.error("calcularRecorrido: Parámetros inválidos para el cálculo de recorridos.");
             return listaRecorridos;
         }
 
@@ -305,8 +305,8 @@ public class Calculo {
             Parada actual = i.next();
             Tramo t = tramos.get(Util.claveTramo(anterior, actual));
 
-            if (t==null) {
-                LOGGER.warn("Tramo inexistente entre las paradas: " + anterior.getCodigo() + " y " + actual.getCodigo());
+            if (t == null) {
+                LOGGER.error("crearRecorrido: Tramo inexistente entre las paradas: " + anterior.getCodigo() + " y " + actual.getCodigo());
                 return null;
             }
             // Activamos el tramo cuando llegamos a la parada de origen

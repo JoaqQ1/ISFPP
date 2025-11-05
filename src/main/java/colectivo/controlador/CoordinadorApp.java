@@ -7,6 +7,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Linea;
@@ -23,6 +26,8 @@ import colectivo.servicio.InterfazServiceImpl;
  * Permite acceder a las entidades del sistema como líneas, paradas y tramos, así como a los cálculos asociados.
  */
 public class CoordinadorApp {
+
+    private static final Logger LOGGER = LogManager.getLogger(CoordinadorApp.class.getName());
 
     /** Instancia del sistema de colectivos que mantiene todas las entidades. */
     private SistemaColectivo sistema;
@@ -50,6 +55,10 @@ public class CoordinadorApp {
      * @param sistema el SistemaColectivo a asociar
      */
     public void setSistema(SistemaColectivo sistema) {
+        if(sistema == null) {
+            LOGGER.error("setSistema: El sistema no puede ser nulo");
+            throw new IllegalArgumentException("El sistema no puede ser nulo");
+        }
         this.sistema = sistema;
         this.sistema.setCoordinador(this);
     }
@@ -67,6 +76,10 @@ public class CoordinadorApp {
      * @param calculo el objeto Calculo a asociar
      */
     public void setCalculo(Calculo calculo) {
+        if(calculo == null) {
+            LOGGER.error("setCalculo: El objeto de cálculo no puede ser nulo");
+            throw new IllegalArgumentException("El objeto de cálculo no puede ser nulo");
+        }
         this.calculo = calculo;
     }
 
@@ -83,6 +96,10 @@ public class CoordinadorApp {
      * @param interfaz la interfaz a asociar
      */
     public void setInterfaz(InterfazService interfaz) {
+        if(interfaz == null) {
+            LOGGER.error("setInterfaz: La interfaz no puede ser nula");
+            throw new IllegalArgumentException("La interfaz no puede ser nula");
+        }
         this.interfaz = interfaz;
         this.interfaz.setCoordinador(this);
     }
@@ -110,7 +127,21 @@ public class CoordinadorApp {
     public Map<Integer, Parada> listarParadas() {
         return sistema.getParadas();
     }
+    
+    @SuppressWarnings("unchecked")
     public List<List<Recorrido>> calcularRecorrido(Parada origen, Parada destino, int dia, LocalTime hora) {
+        if(origen == null || destino == null) {
+            LOGGER.error("calcularRecorrido: Parada de origen o destino es nula");
+            throw new IllegalArgumentException("Parada de origen y destino no pueden ser nulas");
+        }
+        if(dia < 0 || dia > 6) {
+            LOGGER.error("calcularRecorrido: Día inválido proporcionado: " + dia);
+            throw new IllegalArgumentException("Día debe estar entre 0 (Domingo) y 6 (Sábado)");
+        }
+        if(hora == null) {
+            LOGGER.error("calcularRecorrido: Hora proporcionada es nula");
+            throw new IllegalArgumentException("Hora no puede ser nula");
+        }
         // Aquí delega al servicio de cálculo
         return calculo.calcularRecorrido(origen, destino, dia, hora, (Map<String,Tramo>)datos.get(Constantes.TRAMO));
     }
@@ -164,6 +195,10 @@ public class CoordinadorApp {
      * @param tipoPersistencia El nuevo tipo (ej. "TXT" o "BD")
      */
     public void cambiarFuenteDeDatos(String tipoPersistencia) {
+        if(tipoPersistencia == null || tipoPersistencia.isEmpty()) {
+            LOGGER.error("cambiarFuenteDeDatos: Tipo de persistencia no puede ser nulo o vacío");
+            throw new IllegalArgumentException("Tipo de persistencia no puede ser nulo o vacío");
+        }
         if (config == null)
             config = ConfiguracionGlobal.geConfiguracionGlobal();
         config.setPersistenciaTipo(tipoPersistencia);
