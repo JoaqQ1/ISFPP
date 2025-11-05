@@ -153,9 +153,9 @@ public class CoordinadorApp {
         config = ConfiguracionGlobal.geConfiguracionGlobal();
 
         inicializarServicios();
-
+        LOGGER.info("Se cargo la interfaz correctamente");
         cargarDatos();
-
+        LOGGER.info("Se cargaron los datos correctamente");
         inicializarNegocio();
 
         inicializarInterfazUsuario();

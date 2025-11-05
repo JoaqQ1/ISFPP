@@ -69,8 +69,8 @@ public class ParadaSecuencialDAO implements ParadaDAO {
         Map<Integer, Parada> map = new TreeMap<>();
         Scanner inFile = null;
         try {
+            
             inFile = new Scanner(new File("src/main/resources/" + file));
-           
             inFile.useDelimiter("\\s*;\\s*");
             
             while (inFile.hasNext()) {

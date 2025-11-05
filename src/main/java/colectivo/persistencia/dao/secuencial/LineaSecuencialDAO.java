@@ -85,7 +85,6 @@ public class LineaSecuencialDAO implements LineaDAO {
         Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
         try {
             inFile = new Scanner(new File("src/main/resources/" + archivoLineas));
-
             while (inFile.hasNextLine()) {
                 String line = inFile.nextLine();
                 Scanner readLine = new Scanner(line);
@@ -101,7 +100,6 @@ public class LineaSecuencialDAO implements LineaDAO {
                     Parada p = paradas.get(codParada);
                     if (p != null) linea.agregarParada(p);
                 }
-
                 map.put(codLinea, linea);
                 readLine.close();
             }
@@ -114,12 +112,15 @@ public class LineaSecuencialDAO implements LineaDAO {
             LOGGER.error("readFromFile: Archivo no encontrado: " + archivoLineas, e);
         } catch (NoSuchElementException e) {
             LOGGER.error("readFromFile: Error en la estructura del archivo de líneas.", e);
-        } finally {
+        }
+        catch(Exception e){
+            LOGGER.error("readFromFile: Algo salio mal leyendo las lineas"+e.getMessage());
+        } 
+        finally {
             if (inFile != null)
                 inFile.close();
             LOGGER.info("Lectura de líneas finalizada.");
         }
-
         return map;
     }
 
@@ -135,17 +136,20 @@ public class LineaSecuencialDAO implements LineaDAO {
             while (inFile.hasNext()) {
                 String codLinea = inFile.next();
                 int dia = inFile.nextInt();
-                LocalTime hora = LocalTime.parse(inFile.next());
+                LocalTime hora = LocalTime.parse( inFile.next());
 
                 Linea l = lineas.get(codLinea);
                 if (l != null) {
                     l.agregarFrecuencia(dia, hora);
                 }
             }
-
         } catch (FileNotFoundException e) {
             LOGGER.error("agregarFrecuencias: Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
-        } finally {
+        }
+        catch(Exception e){
+            LOGGER.error("agregarFrecuencias: Algo salio mal leyendo las frecuencias"+e.getMessage());
+        } 
+        finally {
             if (inFile != null)
                 inFile.close();
         }
