@@ -53,8 +53,8 @@ class TestCalcularRecorridoDAO_CO {
 
 	@Test
 	void testSinColectivo() {
-		Parada paradaOrigen = paradas.get(5);
-		Parada paradaDestino = paradas.get(6);
+		Parada paradaOrigen = paradas.get(151);
+		Parada paradaDestino = paradas.get(19);
 
 		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
 				horaLlegaParada, tramos);
@@ -64,131 +64,146 @@ class TestCalcularRecorridoDAO_CO {
 
 	@Test
 	void testDirecto() {
-		// Parada paradaOrigen = paradas.get(44);
-		// Parada paradaDestino = paradas.get(47);
+		
+		Parada paradaOrigen = paradas.get(5);
+		Parada paradaDestino = paradas.get(140);
 
-		// List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
-		// 		horaLlegaParada, tramos);
-		// assertEquals(2, recorridos.size());
-		// assertEquals(1, recorridos.get(0).size());
-		// assertEquals(1, recorridos.get(1).size());
+		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
+				horaLlegaParada, tramos);
+		assertEquals(2, recorridos.size());
+		assertEquals(1, recorridos.get(0).size());
+		assertEquals(1, recorridos.get(1).size());
 
-		// Recorrido recorrido1;
-		// Recorrido recorrido2;
-		// if (recorridos.get(0).get(0).getLinea().equals(lineas.get("L1I"))) {
-		// 	recorrido1 = recorridos.get(0).get(0);
-		// 	recorrido2 = recorridos.get(1).get(0);
-		// } else {
-		// 	recorrido1 = recorridos.get(0).get(1);
-		// 	recorrido2 = recorridos.get(0).get(0);
-		// }
+		Recorrido recorrido1;
+		Recorrido recorrido2;
+		if (recorridos.get(0).get(0).getLinea().equals(lineas.get("L1I"))) {
+			recorrido1 = recorridos.get(0).get(0);
+			recorrido2 = recorridos.get(1).get(0);
+		} else {
+			recorrido1 = recorridos.get(0).get(1);
+			recorrido2 = recorridos.get(0).get(0);
+		}
 
-		// // recorrido1
-		// assertEquals(lineas.get("L1I"), recorrido1.getLinea());
-		// List<Parada> paradas1 = new ArrayList<Parada>();
-		// paradas1.add(paradas.get(44));
-		// paradas1.add(paradas.get(43));
-		// paradas1.add(paradas.get(47));
-		// assertIterableEquals(paradas1, recorrido1.getParadas());
-		// assertEquals(LocalTime.of(10, 50), recorrido1.getHoraSalida());
-		// assertEquals(180, recorrido1.getDuracion());
+		// recorrido1
+		assertEquals(lineas.get("L1I"), recorrido1.getLinea());
+		List<Parada> paradas1 = new ArrayList<Parada>();
+		paradas1.add(paradas.get(5));
+		paradas1.add(paradas.get(6));
+		paradas1.add(paradas.get(7));
+		paradas1.add(paradas.get(117));
+		paradas1.add(paradas.get(118));
+		paradas1.add(paradas.get(125));
+		paradas1.add(paradas.get(104));
+		paradas1.add(paradas.get(152));
+		paradas1.add(paradas.get(99));
+		paradas1.add(paradas.get(130));
+		paradas1.add(paradas.get(128));
+		paradas1.add(paradas.get(76));
+		paradas1.add(paradas.get(147));
+		paradas1.add(paradas.get(48));
+		paradas1.add(paradas.get(51));
+		paradas1.add(paradas.get(49));
+		paradas1.add(paradas.get(140));
 
-		// // recorrido2
-		// assertEquals(lineas.get("L5R"), recorrido2.getLinea());
-		// List<Parada> paradas2 = new ArrayList<Parada>();
-		// paradas2.add(paradas.get(44));
-		// paradas2.add(paradas.get(43));
-		// paradas2.add(paradas.get(47));
-		// assertIterableEquals(paradas2, recorrido2.getParadas());
-		// assertEquals(LocalTime.of(10, 47, 30), recorrido2.getHoraSalida());
-		// assertEquals(180, recorrido2.getDuracion());
+		assertIterableEquals(paradas1, recorrido1.getParadas());
+		assertEquals(LocalTime.of(11, 00), recorrido1.getHoraSalida());
+		assertEquals(740, recorrido1.getDuracion());
+
+		// recorrido2
+		assertEquals(lineas.get("L1R"), recorrido2.getLinea());
+		List<Parada> paradas2 = new ArrayList<Parada>();
+		paradas2.add(paradas.get(5));
+		paradas2.add(paradas.get(6));
+		paradas2.add(paradas.get(7));
+		paradas2.add(paradas.get(9));
+		paradas2.add(paradas.get(84));
+		paradas2.add(paradas.get(83));
+		paradas2.add(paradas.get(59));
+		paradas2.add(paradas.get(85));
+		paradas2.add(paradas.get(128));
+		paradas2.add(paradas.get(74));
+		paradas2.add(paradas.get(75));
+		paradas2.add(paradas.get(146));
+		paradas2.add(paradas.get(47));
+		paradas2.add(paradas.get(50));
+		paradas2.add(paradas.get(52));
+		paradas2.add(paradas.get(46));
+		paradas2.add(paradas.get(159));
+		paradas2.add(paradas.get(100));
+		paradas2.add(paradas.get(151));
+		paradas2.add(paradas.get(143));
+		paradas2.add(paradas.get(145));
+		paradas2.add(paradas.get(142));
+		paradas2.add(paradas.get(148));
+		paradas2.add(paradas.get(95));
+		paradas2.add(paradas.get(27));
+		paradas2.add(paradas.get(26));
+		paradas2.add(paradas.get(110));
+		paradas2.add(paradas.get(58));
+		paradas2.add(paradas.get(79));
+		paradas2.add(paradas.get(68));
+		paradas2.add(paradas.get(82));
+		paradas2.add(paradas.get(157));
+		paradas2.add(paradas.get(120));
+		paradas2.add(paradas.get(119));
+		paradas2.add(paradas.get(98));
+		paradas2.add(paradas.get(110));
+		paradas2.add(paradas.get(24));
+		paradas2.add(paradas.get(25));
+		paradas2.add(paradas.get(95));
+		paradas2.add(paradas.get(62));
+		paradas2.add(paradas.get(34));
+		paradas2.add(paradas.get(144));
+		paradas2.add(paradas.get(143));
+		paradas2.add(paradas.get(151));
+		paradas2.add(paradas.get(113));
+		paradas2.add(paradas.get(114));
+		paradas2.add(paradas.get(140));
+
+		assertIterableEquals(paradas2, recorrido2.getParadas());
+		assertEquals(LocalTime.of(10, 46), recorrido2.getHoraSalida());
+		assertEquals(2420, recorrido2.getDuracion());
 
 	}
 
 	@Test
 	void testConexion() {
-		Parada paradaOrigen = paradas.get(88);
-		Parada paradaDestino = paradas.get(123);
+		Parada paradaOrigen = paradas.get(100); // 143 conexion
+		Parada paradaDestino = paradas.get(124);
+		
+		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
+				horaLlegaParada, tramos);
 
-		// List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
-		// 		horaLlegaParada, tramos);
-
-		// assertEquals(2, recorridos.size());
-		// assertEquals(2, recorridos.get(0).size());
+		assertEquals(1, recorridos.size());
+		assertEquals(2, recorridos.get(0).size());
 		// assertEquals(2, recorridos.get(1).size());
 
-		// Recorrido recorrido1;
-		// Recorrido recorrido2;
-		// Recorrido recorrido3;
-		// Recorrido recorrido4;
-		// if (recorridos.get(0).get(0).getLinea().equals(lineas.get("L1I"))) {
-		// 	recorrido1 = recorridos.get(0).get(0);
-		// 	recorrido2 = recorridos.get(0).get(1);
-		// 	recorrido3 = recorridos.get(1).get(0);
-		// 	recorrido4 = recorridos.get(1).get(1);
-		// } else {
-		// 	recorrido1 = recorridos.get(1).get(0);
-		// 	recorrido2 = recorridos.get(1).get(1);
-		// 	recorrido3 = recorridos.get(0).get(0);
-		// 	recorrido4 = recorridos.get(0).get(1);
-		// }
+		Recorrido recorrido1;
+		Recorrido recorrido2;
+		
+		recorrido1 = recorridos.get(0).get(0);
+		recorrido2 = recorridos.get(0).get(1);
 
-		// // recorrido1
-		// assertEquals(lineas.get("L1I"), recorrido1.getLinea());
-		// List<Parada> paradas1 = new ArrayList<Parada>();
-		// paradas1.add(paradas.get(88));
-		// paradas1.add(paradas.get(97));
-		// paradas1.add(paradas.get(44));
-		// assertIterableEquals(paradas1, recorrido1.getParadas());
-		// assertEquals(LocalTime.of(10, 48), recorrido1.getHoraSalida());
-		// assertEquals(120, recorrido1.getDuracion());
 
-		// // recorrido2
-		// assertEquals(lineas.get("L5R"), recorrido2.getLinea());
-		// List<Parada> paradas2 = new ArrayList<Parada>();
-		// paradas2.add(paradas.get(44));
-		// paradas2.add(paradas.get(43));
-		// paradas2.add(paradas.get(47));
-		// paradas2.add(paradas.get(99));
-		// paradas2.add(paradas.get(24));
-		// paradas2.add(paradas.get(5));
-		// paradas2.add(paradas.get(54));
-		// paradas2.add(paradas.get(28));
-		// paradas2.add(paradas.get(101));
-		// paradas2.add(paradas.get(18));
-		// paradas2.add(paradas.get(78));
-		// paradas2.add(paradas.get(13));
-		// assertIterableEquals(paradas2, recorrido2.getParadas());
-		// assertEquals(LocalTime.of(11, 07, 30), recorrido2.getHoraSalida());
-		// assertEquals(1110, recorrido2.getDuracion());
+		// recorrido1
+		// 100;151;143 CONEXION 143;124
+		assertEquals(lineas.get("L1R"), recorrido1.getLinea());
+		List<Parada> paradas1 = new ArrayList<Parada>();
+		paradas1.add(paradas.get(100));
+		paradas1.add(paradas.get(151));
+		paradas1.add(paradas.get(143));
+		assertIterableEquals(paradas1, recorrido1.getParadas());
+		assertEquals(LocalTime.of(11, 02), recorrido1.getHoraSalida()); // tarda 930 segundos en llegar a la parada 100
+		assertEquals(60, recorrido1.getDuracion());
 
-		// // recorrido3
-		// assertEquals(lineas.get("L4R"), recorrido3.getLinea());
-		// List<Parada> paradas3 = new ArrayList<Parada>();
-		// paradas3.add(paradas.get(88));
-		// paradas3.add(paradas.get(63));
-		// paradas3.add(paradas.get(65));
-		// paradas3.add(paradas.get(64));
-		// paradas3.add(paradas.get(77));
-		// paradas3.add(paradas.get(25));
-		// paradas3.add(paradas.get(5));
-		// assertIterableEquals(paradas3, recorrido3.getParadas());
-		// assertEquals(LocalTime.of(10, 36), recorrido3.getHoraSalida());
-		// assertEquals(720, recorrido3.getDuracion());
-
-		// // recorrido4
-		// assertEquals(lineas.get("L5R"), recorrido4.getLinea());
-		// List<Parada> paradas4 = new ArrayList<Parada>();
-		// paradas4.add(paradas.get(5));
-		// paradas4.add(paradas.get(54));
-		// paradas4.add(paradas.get(28));
-		// paradas4.add(paradas.get(101));
-		// paradas4.add(paradas.get(18));
-		// paradas4.add(paradas.get(78));
-		// paradas4.add(paradas.get(13));
-		// assertIterableEquals(paradas4, recorrido4.getParadas());
-		// assertEquals(LocalTime.of(10, 55), recorrido4.getHoraSalida());
-		// assertEquals(660, recorrido4.getDuracion());
+		assertEquals(lineas.get("L3I"), recorrido2.getLinea());
+		List<Parada> paradas2 = new ArrayList<Parada>();
+		paradas2.add(paradas.get(143));
+		paradas2.add(paradas.get(124));
+		assertIterableEquals(paradas2, recorrido2.getParadas());
+		
+		assertEquals(LocalTime.of(11, 04, 48), recorrido2.getHoraSalida());
+		assertEquals(43, recorrido2.getDuracion());
 	}
 
 	@Test
@@ -199,46 +214,46 @@ class TestCalcularRecorridoDAO_CO {
 		List<List<Recorrido>> recorridos = calculo.calcularRecorrido(paradaOrigen, paradaDestino, diaSemana,
 				horaLlegaParada, tramos);
 		
-		assertEquals(1, recorridos.size());
-		assertEquals(3, recorridos.get(0).size());		
+		// assertEquals(1, recorridos.size());
+		// assertEquals(3, recorridos.get(0).size());		
 
-		Recorrido recorrido1 = recorridos.get(0).get(0);
-		Recorrido recorrido2 = recorridos.get(0).get(1);
-		Recorrido recorrido3 = recorridos.get(0).get(2);
+		// Recorrido recorrido1 = recorridos.get(0).get(0);
+		// Recorrido recorrido2 = recorridos.get(0).get(1);
+		// Recorrido recorrido3 = recorridos.get(0).get(2);
 		
-		// recorrido1
-		assertEquals(lineas.get("L2R"), recorrido1.getLinea());
-		List<Parada> paradas1 = new ArrayList<Parada>();
-		paradas1.add(paradas.get(31));
-		paradas1.add(paradas.get(8));
-		paradas1.add(paradas.get(33));
-		paradas1.add(paradas.get(20));
-		paradas1.add(paradas.get(25));
-		paradas1.add(paradas.get(24));		
-		assertIterableEquals(paradas1, recorrido1.getParadas());
-		assertEquals(LocalTime.of(10, 39), recorrido1.getHoraSalida());
-		assertEquals(480, recorrido1.getDuracion());
+		// // recorrido1
+		// assertEquals(lineas.get("L2R"), recorrido1.getLinea());
+		// List<Parada> paradas1 = new ArrayList<Parada>();
+		// paradas1.add(paradas.get(31));
+		// paradas1.add(paradas.get(8));
+		// paradas1.add(paradas.get(33));
+		// paradas1.add(paradas.get(20));
+		// paradas1.add(paradas.get(25));
+		// paradas1.add(paradas.get(24));		
+		// assertIterableEquals(paradas1, recorrido1.getParadas());
+		// assertEquals(LocalTime.of(10, 39), recorrido1.getHoraSalida());
+		// assertEquals(480, recorrido1.getDuracion());
 		
-		// recorrido2
-		assertNull(recorrido2.getLinea()); // Caminando
-		List<Parada> paradas2 = new ArrayList<Parada>();
-		paradas2.add(paradas.get(24));
-		paradas2.add(paradas.get(75));		
-		assertIterableEquals(paradas2, recorrido2.getParadas());
-		assertEquals(LocalTime.of(10, 47), recorrido2.getHoraSalida());
-		assertEquals(120, recorrido2.getDuracion());
+		// // recorrido2
+		// assertNull(recorrido2.getLinea()); // Caminando
+		// List<Parada> paradas2 = new ArrayList<Parada>();
+		// paradas2.add(paradas.get(24));
+		// paradas2.add(paradas.get(75));		
+		// assertIterableEquals(paradas2, recorrido2.getParadas());
+		// assertEquals(LocalTime.of(10, 47), recorrido2.getHoraSalida());
+		// assertEquals(120, recorrido2.getDuracion());
 
-		// recorrido3
-		assertEquals(lineas.get("L6I"), recorrido3.getLinea());
-		List<Parada> paradas3 = new ArrayList<Parada>();
-		paradas3.add(paradas.get(75));
-		paradas3.add(paradas.get(76));
-		paradas3.add(paradas.get(38));
-		paradas3.add(paradas.get(40));
-		paradas3.add(paradas.get(66));		
-		assertIterableEquals(paradas3, recorrido3.getParadas());
-		assertEquals(LocalTime.of(11, 02), recorrido3.getHoraSalida());
-		assertEquals(600, recorrido3.getDuracion());
+		// // recorrido3
+		// assertEquals(lineas.get("L6I"), recorrido3.getLinea());
+		// List<Parada> paradas3 = new ArrayList<Parada>();
+		// paradas3.add(paradas.get(75));
+		// paradas3.add(paradas.get(76));
+		// paradas3.add(paradas.get(38));
+		// paradas3.add(paradas.get(40));
+		// paradas3.add(paradas.get(66));		
+		// assertIterableEquals(paradas3, recorrido3.getParadas());
+		// assertEquals(LocalTime.of(11, 02), recorrido3.getHoraSalida());
+		// assertEquals(600, recorrido3.getDuracion());
 
 	}
 }

@@ -73,7 +73,11 @@ public class Calculo {
             Map<String, Tramo> tramos) {
         // ? ========== Recorridos Directos ==========√ 
         List<List<Recorrido>> listaRecorridos = new ArrayList<>();
-        
+        if(!validarParametros(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, tramos)){
+            LOGGER.warn("Parámetros inválidos para el cálculo de recorridos.");
+            return listaRecorridos;
+        }
+
         // Iteramos sobre las líneas que pasan por la parada de origen
         for (Linea l1 : paradaOrigen.getLineas()) {
             // Si la línea también pasa por la parada destino Y el índice del destino es mayor
@@ -300,6 +304,11 @@ public class Calculo {
         while (i.hasNext()) {
             Parada actual = i.next();
             Tramo t = tramos.get(Util.claveTramo(anterior, actual));
+
+            if (t==null) {
+                LOGGER.warn("Tramo inexistente entre las paradas: " + anterior.getCodigo() + " y " + actual.getCodigo());
+                return null;
+            }
             // Activamos el tramo cuando llegamos a la parada de origen
             if (anterior.equals(origen)) {
                 enTramo = true;
@@ -396,5 +405,42 @@ public class Calculo {
         return tiempoAcumulado;
     }
 
-
+    private boolean validarParadas(Parada origen, Parada destino){
+        if(origen == null || destino == null) return false;
+        if(origen.equals(destino)) return false;
+        return true;
+    }
+    private boolean validarDiaSemana(int diaSemana){
+        return diaSemana >= 1 && diaSemana <= 7;
+    }
+    private boolean validarHoraLlegada(LocalTime horaLlegaParada){
+        return horaLlegaParada != null;
+    }
+    private boolean validarTramos(Map<String, Tramo> tramos){
+        return tramos != null && !tramos.isEmpty();
+    }
+    private boolean validarParametros(
+        Parada origen,
+        Parada destino,
+        int diaSemana,
+        LocalTime horaLlegaParada,
+        Map<String, Tramo> tramos){
+            if(!validarParadas(origen, destino)){
+                LOGGER.warn("Las paradas no pueden ser nulas o iguales.");
+                return false;
+            }
+            if(!validarDiaSemana(diaSemana)){
+                LOGGER.warn("El día de la semana es inválido: " + diaSemana);
+                return false;
+            }
+            if(!validarHoraLlegada(horaLlegaParada)){
+                LOGGER.warn("La hora de llegada a la parada no puede ser nula.");
+                return false;
+            }
+            if(!validarTramos(tramos)){
+                LOGGER.warn("El mapa de tramos no puede ser nulo o vacío.");
+                return false;
+            }
+            return true;
+    }
 }

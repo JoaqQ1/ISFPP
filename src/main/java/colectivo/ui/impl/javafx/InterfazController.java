@@ -1001,7 +1001,7 @@ public class InterfazController implements Initializable, Coordinable {
      * el String por el cual se debe buscar.
      */
     private <T> void setupAutoComplete(ComboBox<T> comboBox, List<T> masterList, 
-                                     Function<T, String> stringExtractor) {
+                                    Function<T, String> stringExtractor) {
         
         // 1. Establece la lista inicial
         comboBox.setItems(FXCollections.observableArrayList(masterList));
@@ -1019,7 +1019,7 @@ public class InterfazController implements Initializable, Coordinable {
                         .filter(item -> 
                             // Aquí usamos la función que pasamos como parámetro
                             stringExtractor.apply(item).toLowerCase()
-                                         .contains(typedText.toLowerCase())
+                                            .contains(typedText.toLowerCase())
                         )
                         .collect(Collectors.toList());
 
