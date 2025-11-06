@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import colectivo.controlador.CoordinadorApp;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
@@ -14,21 +17,24 @@ import colectivo.util.Tiempo;
 
 public class InterfazConsola implements Interfaz {
     
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private static final Scanner sc = new Scanner(System.in);
 
     private CoordinadorApp coordinador;
 
     private static boolean debug = false;
 
-    private static int origen = 31;
-    private static int destino = 66;
+    private static int origen = 83;
+    private static int destino = 123;
 
     public InterfazConsola(){
+        // debug = true;
     }
 
     public void iniciar(){
         if(coordinador == null){
-            System.out.println("Debe setear un coordinador primero");
+            LOGGER.error("iniciar: Debe setear un coordinador primero");
             return;
         }
         Parada origen = ingresarParadaOrigen(coordinador.listarParadas());
@@ -63,7 +69,7 @@ public class InterfazConsola implements Interfaz {
             if (parada != null) {
                 return parada;
             } else {
-                System.out.println("❌ No existe una parada con ese código. Intente nuevamente.\n");
+                LOGGER.error("ingresarParadaOrigen: ❌ No existe una parada con ese código. Intente nuevamente.\n");
             }
         }
         
@@ -109,7 +115,7 @@ public class InterfazConsola implements Interfaz {
 
         int dia = leerEnteroSeguro();
         while (dia < 1 || dia > 7) {
-            System.out.print("Valor inválido. Ingrese un número entre 1 y 7: ");
+            LOGGER.warn("ingresarDiaSemana: Valor inválido. Ingrese un número entre 1 y 7");
             dia = leerEnteroSeguro();
         }
         return dia;
@@ -131,7 +137,7 @@ public class InterfazConsola implements Interfaz {
                 String input = sc.next();
                 return LocalTime.parse(input);
             } catch (Exception e) {
-                System.out.print("Formato inválido. Intente nuevamente (ejemplo 10:35): ");
+                LOGGER.error("ingresarHoraLlegaParada: Formato inválido. Intente nuevamente (ejemplo 10:35): ");
             }
         }
     }
@@ -151,7 +157,7 @@ public class InterfazConsola implements Interfaz {
         System.out.println("==============================");
 
         if (listaRecorridos.isEmpty()) {
-            System.out.println("No hay recorridos recomendado");
+            LOGGER.error("resultado: No hay recorridos recomendado");
             return;
         }
         for (List<Recorrido> recorridos : listaRecorridos) {

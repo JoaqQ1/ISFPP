@@ -1,0 +1,26 @@
+Ciudad elegida:	
+CALETA OLIVIA - SANTA CRUZ - ARGENTINA
+
+
+------------ Links de la informacion ------------
+
+Nombres de las paradas y lineas. Recorridos y horarios: 		https://moovitapp.com/tripplan/caleta_olivia-4605/lines/01/64935360/10077918/es-419?ref=5&customerId=4908
+								  	https://moovitapp.com/tripplan/caleta_olivia-4605/lines/02/64935359/5918005/es-419?ref=5&customerId=4908
+								  	https://moovitapp.com/tripplan/caleta_olivia-4605/lines/03/64935358/6621370/es-419?ref=5&customerId=4908
+								  	https://moovitapp.com/tripplan/caleta_olivia-4605/poi/es-419?ref=5&customerId=4908
+								  	https://moovitapp.com/index/es-419/transporte_p%C3%BAblico-line-01-Caleta_Olivia-4605-2676529-64935360-0
+								  	https://moovitapp.com/index/es-419/transporte_p%C3%BAblico-line-02-Caleta_Olivia-4605-2676529-64935359-0
+								  	https://moovitapp.com/index/es-419/transporte_p%C3%BAblico-line-03-Caleta_Olivia-4605-2676529-64935358-0
+
+Coordenadas (latitud y longitud) de cada parada: 			https://www.google.com/maps
+								  	https://moovitapp.com/tripplan/caleta_olivia-4605/poi/es-419?ref=5&customerId=4908
+
+
+-------- Links de herramientas utilizadas ---------
+
+
+Inteligencias artificiales utilizadas para:				https://gemini.google.com/app?hl=es
+								  	https://chatgpt.com/
+- Cambio de formato de grandes bloques de texto
+- Limpieza de datos
+- Correccion de errores

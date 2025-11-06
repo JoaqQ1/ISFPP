@@ -37,7 +37,7 @@ public class ConexionBD {
 			}
 			return con;
 		} catch (Exception ex) {
-			LOGGER.error("Error al crear la conexion: " + ex.getMessage());
+			LOGGER.error("getConnection: Error al crear la conexion: " + ex.getMessage());
 			throw new RuntimeException("Error al crear la conexion", ex);
 		}
 	}
@@ -50,6 +50,7 @@ public class ConexionBD {
 				Connection con = ConexionBD.getConnection();
 				con.close();
 			} catch (Exception ex) {
+				LOGGER.error("MiShDwnHook.run: Error al cerrar la conexion: " + ex.getMessage());
 				ex.printStackTrace();
 				throw new RuntimeException(ex);
 			}

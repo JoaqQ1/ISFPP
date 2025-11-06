@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Parada;
@@ -29,10 +30,22 @@ public class TramoSecuencialDAO implements TramoDAO {
     private boolean actualizar;
 
     public TramoSecuencialDAO() {
-        // Leemos el nombre del archivo desde secuencial.properties
+        // 1. Obtener la configuración global
+        ConfiguracionGlobal config = ConfiguracionGlobal.getConfiguracionGlobal();
+
+        // 2. Obtener el código de la ciudad actual (ej: "CO")
+        String ciudadActual = config.getCiudadActual();
+
+        // 3. Leemos el nombre del archivo desde secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
-        name = rb.getString("tramo");
-        LOGGER.info("TramoSecuencialDAO inicializado con archivo: " + name);
+        
+        // 4. Construir la clave dinámica
+        String claveTramo = "tramo." + ciudadActual; // Ej: "tramo.CO"
+
+        // 5. Obtener el nombre del archivo
+        name = rb.getString(claveTramo);
+
+        LOGGER.info("TramoSecuencialDAO inicializado para la ciudad: " + ciudadActual + " con archivo: " + name);
     }
 
     public Map<String, Tramo> buscarTodos() {
@@ -95,11 +108,11 @@ public class TramoSecuencialDAO implements TramoDAO {
             }
             LOGGER.info("Tramos cargados desde archivo: " + file);
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error: archivo no encontrado -> " + file, e);
+            LOGGER.error("readFromFile: Error: archivo no encontrado -> " + file, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("Error en la estructura del archivo de tramos.", e);
+            LOGGER.error("readFromFile: Error en la estructura del archivo de tramos.", e);
         } catch (IllegalStateException e) {
-            LOGGER.error("Error leyendo el archivo de tramos.", e);
+            LOGGER.error("readFromFile: Error leyendo el archivo de tramos.", e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -126,9 +139,9 @@ public class TramoSecuencialDAO implements TramoDAO {
                         t.getTipo());
             }
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error creando archivo de tramos.", e);
+            LOGGER.error("writeToFile: Error creando archivo de tramos.", e);
         } catch (FormatterClosedException e) {
-            LOGGER.error("Error escribiendo archivo de tramos.", e);
+            LOGGER.error("writeToFile: Error escribiendo archivo de tramos.", e);
         } finally {
             if (outFile != null)
                 outFile.close();

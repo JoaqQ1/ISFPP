@@ -27,8 +27,11 @@ public class Parada {
 		this.paradaCaminando = new ArrayList<Parada>();
 	}
 
-	public void agregarLinea(Linea linea) {
-		this.lineas.add(linea);
+	public void agregarLinea(Linea linea) { 
+		// Agrega la linea solo si no está ya en la lista
+		if(!this.lineas.contains(linea)) {
+			this.lineas.add(linea);
+		}
 	}
 
 	public void agregarParadaCaminado(Parada parada) {

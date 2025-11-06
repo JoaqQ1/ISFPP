@@ -71,11 +71,12 @@ public class Calculo {
             int diaSemana,
             LocalTime horaLlegaParada,
             Map<String, Tramo> tramos) {
-
         // ? ========== Recorridos Directos ==========√ 
         List<List<Recorrido>> listaRecorridos = new ArrayList<>();
-        boolean recorridoDirectoEncontrado = false;
-        boolean recorridoConConexionEncontrado = false;
+        if(!validarParametros(paradaOrigen, paradaDestino, diaSemana, horaLlegaParada, tramos)){
+            LOGGER.error("calcularRecorrido: Parámetros inválidos para el cálculo de recorridos.");
+            return listaRecorridos;
+        }
 
         // Iteramos sobre las líneas que pasan por la parada de origen
         for (Linea l1 : paradaOrigen.getLineas()) {
@@ -84,7 +85,6 @@ public class Calculo {
             List<Parada> paradasLinea = l1.getParadas();
             int idxOrigen = paradasLinea.indexOf(paradaOrigen);
             int idxDestino = paradasLinea.indexOf(paradaDestino);
-
             if (idxDestino > idxOrigen) {
                 Recorrido recorrido = crearRecorrido(l1, paradaOrigen, paradaDestino, tramos, diaSemana, horaLlegaParada);
 
@@ -93,24 +93,24 @@ public class Calculo {
                     List<Recorrido> recorridos = new ArrayList<>();
                     recorridos.add(recorrido);
                     listaRecorridos.add(recorridos);
-                    recorridoDirectoEncontrado = true;
                 }
             }
 
         }
         //? ========== Recorridos con Conexiones ==========
-        if(!recorridoDirectoEncontrado){
-            recorridoConConexionEncontrado = buscarConexiones(
-                                                paradaOrigen, 
-                                                paradaDestino, 
-                                                diaSemana, 
-                                                horaLlegaParada, 
-                                                tramos, 
-                                                listaRecorridos);
+        if(listaRecorridos.isEmpty()){
+            buscarConexiones(
+                paradaOrigen, 
+                paradaDestino, 
+                diaSemana, 
+                horaLlegaParada, 
+                tramos, 
+                listaRecorridos);
         }
         
         //? ========== Recorridos con Caminando ==========
-        if(!recorridoConConexionEncontrado){
+
+        if(listaRecorridos.isEmpty()){
             
             buscarConexionesCaminando(
                                     paradaOrigen, 
@@ -138,14 +138,14 @@ public class Calculo {
      * Ejemplo: Línea A lleva de origen a parada intermedia, y Línea B conecta desde esa
      * parada intermedia hasta el destino.
      */
-    private boolean buscarConexiones(
+    private void buscarConexiones(
         Parada origen,
         Parada destino,
         int diaSemana,
         LocalTime horaLlegada,
         Map<String, Tramo> tramos,
         List<List<Recorrido>> resultados) {
-        boolean recorridoEncontrado = false;
+        // boolean recorridoEncontrado = false;
         for (Linea primeraLinea : origen.getLineas()) {
             int indexOrigen = primeraLinea.getParadas().indexOf(origen);
             List<Parada> paradasLinea1 = primeraLinea.getParadas().subList(indexOrigen + 1, primeraLinea.getParadas().size());
@@ -163,47 +163,50 @@ public class Calculo {
                             diaSemana, 
                             horaLlegada);
 
-                // Buscamos una segunda línea que conecte la parada intermedia con el destino
-                for (Linea segundaLinea : paradaConexion.getLineas()) {
-                    if (!segundaLinea.equals(primeraLinea)) {
-                        if (segundaLinea.getParadas().contains(destino)) {
-                            int indexIntermedia = segundaLinea.getParadas().indexOf(paradaConexion);
-                            int indexDestino = segundaLinea.getParadas().indexOf(destino);
+                if (recorrido1 != null) {
 
-                            // Verifica que el destino esté después de la parada de conexión
-                            if (indexIntermedia < indexDestino) {
-                                // El segundo tramo comienza al llegar al punto de conexión
-                                LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
-                                Recorrido recorrido2 = crearRecorrido(
-                                        segundaLinea,
-                                        paradaConexion,
-                                        destino,
-                                        tramos,
-                                        diaSemana,
-                                        horaInicioSegundaParte);
+                    // Buscamos una segunda línea que conecte la parada intermedia con el destino
+                    for (Linea segundaLinea : paradaConexion.getLineas()) {
+                        if (!segundaLinea.equals(primeraLinea)) {
+                            if (segundaLinea.getParadas().contains(destino)) {
+                                int indexIntermedia = segundaLinea.getParadas().indexOf(paradaConexion);
+                                int indexDestino = segundaLinea.getParadas().indexOf(destino);
 
-                                if (recorrido2 != null) {
-                                    List<Recorrido> combinacion = new ArrayList<>();
-                                    combinacion.add(recorrido1);
-                                    combinacion.add(recorrido2);
-                                    resultados.add(combinacion);
-                                    trasbordoEncontrado = true;
-                                    recorridoEncontrado = true;
-                                    break;
+                                // Verifica que el destino esté después de la parada de conexión
+                                if (indexIntermedia < indexDestino) {
+                                    // El segundo tramo comienza al llegar al punto de conexión
+                                    LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
+                                    Recorrido recorrido2 = crearRecorrido(
+                                            segundaLinea,
+                                            paradaConexion,
+                                            destino,
+                                            tramos,
+                                            diaSemana,
+                                            horaInicioSegundaParte);
+
+                                    if (recorrido2 != null) {
+                                        List<Recorrido> combinacion = new ArrayList<>();
+                                        combinacion.add(recorrido1);
+                                        combinacion.add(recorrido2);
+                                        resultados.add(combinacion);
+                                        trasbordoEncontrado = true;
+                                        // recorridoEncontrado = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                // El primer trasbordo que se encuentra en el que se agrega
-                if (trasbordoEncontrado) {
-                    break;
-                }
-                
+                    // El primer trasbordo que se encuentra en el que se agrega
+                    if (trasbordoEncontrado) {
+                        break;
+                    }
+                    
 
+                }
             }
         }
-        return recorridoEncontrado;
+        // return recorridoEncontrado;
     }
 
     public void buscarConexionesCaminando(
@@ -223,40 +226,43 @@ public class Calculo {
 
                     // Primer tramo del viaje (origen → conexión)
                     Recorrido recorrido1 = crearRecorrido(primeraLinea,origen, paradaConexion, tramos, diaSemana, horaLlegada);
-                    
-                    for(Parada paradaCaminando : paradaConexion.getParadaCaminando()){
-                        for(Linea segundaLinea:paradaCaminando.getLineas()){
-                            if(segundaLinea.getParadas().contains(destino)){
-                                
-                                LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
-                                Tramo t = tramos.get(Util.claveTramo(paradaConexion, paradaCaminando));
-                                
-                                Recorrido recorrido2 = new Recorrido(null, List.of(t.getInicio(),t.getFin()), horaInicioSegundaParte, t.getTiempo());
-                                
-                                int indexIntermedia = segundaLinea.getParadas().indexOf(t.getFin());
-                                int indexDestino = segundaLinea.getParadas().indexOf(destino);
-                                
-                                if (indexIntermedia < indexDestino) {
-                                    // El segundo tramo comienza al llegar al punto de conexión
-                                    LocalTime horaInicioTerceraParte = recorrido2.getHoraSalida().plusSeconds(recorrido2.getDuracion());
-                                    Recorrido recorrido3 = crearRecorrido( segundaLinea,t.getFin(),destino,tramos,diaSemana,horaInicioTerceraParte);
+                    if(recorrido1 != null){
 
+                        for(Parada paradaCaminando : paradaConexion.getParadaCaminando()){
+                            for(Linea segundaLinea:paradaCaminando.getLineas()){
+                                if(segundaLinea.getParadas().contains(destino)){
                                     
-                                    if (recorrido2 != null) {
-                                        List<Recorrido> combinacion = new ArrayList<>();
-                                        combinacion.add(recorrido1);
-                                        combinacion.add(recorrido2);
-                                        combinacion.add(recorrido3);
-                                        resultados.add(combinacion);
-                                        trasbordoEncontrado = true;
-                                        break;
-                                    }   
+                                    LocalTime horaInicioSegundaParte = recorrido1.getHoraSalida().plusSeconds(recorrido1.getDuracion());
+                                    Tramo t = tramos.get(Util.claveTramo(paradaConexion, paradaCaminando));
+                                    
+                                    Recorrido recorrido2 = new Recorrido(null, List.of(t.getInicio(),t.getFin()), horaInicioSegundaParte, t.getTiempo());
+                                    
+                                    int indexIntermedia = segundaLinea.getParadas().indexOf(t.getFin());
+                                    int indexDestino = segundaLinea.getParadas().indexOf(destino);
+                                    if(recorrido2 != null){
+                                        if (indexIntermedia < indexDestino) {
+                                            // El segundo tramo comienza al llegar al punto de conexión
+                                            LocalTime horaInicioTerceraParte = recorrido2.getHoraSalida().plusSeconds(recorrido2.getDuracion());
+                                            Recorrido recorrido3 = crearRecorrido( segundaLinea,t.getFin(),destino,tramos,diaSemana,horaInicioTerceraParte);
+
+                                            
+                                            if (recorrido2 != null) {
+                                                List<Recorrido> combinacion = new ArrayList<>();
+                                                combinacion.add(recorrido1);
+                                                combinacion.add(recorrido2);
+                                                combinacion.add(recorrido3);
+                                                resultados.add(combinacion);
+                                                trasbordoEncontrado = true;
+                                                break;
+                                            }   
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                    if (trasbordoEncontrado) {
-                        break;
+                        if (trasbordoEncontrado) {
+                            break;
+                        }
                     }
                 }
             }
@@ -295,11 +301,14 @@ public class Calculo {
         if (!i.hasNext()) return null;
 
         Parada anterior = i.next();
-
         while (i.hasNext()) {
             Parada actual = i.next();
-
             Tramo t = tramos.get(Util.claveTramo(anterior, actual));
+
+            if (t == null) {
+                LOGGER.error("crearRecorrido: Tramo inexistente entre las paradas: " + anterior.getCodigo() + " y " + actual.getCodigo());
+                return null;
+            }
             // Activamos el tramo cuando llegamos a la parada de origen
             if (anterior.equals(origen)) {
                 enTramo = true;
@@ -396,5 +405,42 @@ public class Calculo {
         return tiempoAcumulado;
     }
 
-
+    private boolean validarParadas(Parada origen, Parada destino){
+        if(origen == null || destino == null) return false;
+        if(origen.equals(destino)) return false;
+        return true;
+    }
+    private boolean validarDiaSemana(int diaSemana){
+        return diaSemana >= 1 && diaSemana <= 7;
+    }
+    private boolean validarHoraLlegada(LocalTime horaLlegaParada){
+        return horaLlegaParada != null;
+    }
+    private boolean validarTramos(Map<String, Tramo> tramos){
+        return tramos != null && !tramos.isEmpty();
+    }
+    private boolean validarParametros(
+        Parada origen,
+        Parada destino,
+        int diaSemana,
+        LocalTime horaLlegaParada,
+        Map<String, Tramo> tramos){
+            if(!validarParadas(origen, destino)){
+                LOGGER.warn("Las paradas no pueden ser nulas o iguales.");
+                return false;
+            }
+            if(!validarDiaSemana(diaSemana)){
+                LOGGER.warn("El día de la semana es inválido: " + diaSemana);
+                return false;
+            }
+            if(!validarHoraLlegada(horaLlegaParada)){
+                LOGGER.warn("La hora de llegada a la parada no puede ser nula.");
+                return false;
+            }
+            if(!validarTramos(tramos)){
+                LOGGER.warn("El mapa de tramos no puede ser nulo o vacío.");
+                return false;
+            }
+            return true;
+    }
 }

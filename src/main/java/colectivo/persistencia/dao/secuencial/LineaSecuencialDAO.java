@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Linea;
@@ -31,11 +32,25 @@ public class LineaSecuencialDAO implements LineaDAO {
     private boolean actualizar;
     
     public LineaSecuencialDAO() {
-        // Leemos los nombres de archivos desde secuencial.properties
+        // 1. Obtener la configuración global
+        ConfiguracionGlobal config = ConfiguracionGlobal.getConfiguracionGlobal();
+        
+        // 2. Obtener el código de la ciudad actual (ej: "CO")
+        String ciudadActual = config.getCiudadActual();
+        
+        // 3. Leemos los nombres de archivos desde secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
-        archivoLineas = rb.getString("linea");
-        archivoFrecuencias = rb.getString("frecuencia");
-        LOGGER.info("LineaSecuencialDAO inicializado con archivos: " + archivoLineas + ", " + archivoFrecuencias);
+        
+        // 4. Construir las claves dinámicamente
+        String claveLinea = "linea." + ciudadActual;         // Ej: "linea.CO"
+        String claveFrecuencia = "frecuencia." + ciudadActual; // Ej: "frecuencia.CO"
+
+        // 5. Obtener los nombres de archivo usando las claves dinámicas
+        archivoLineas = rb.getString(claveLinea);
+        archivoFrecuencias = rb.getString(claveFrecuencia);
+        
+        LOGGER.info("LineaSecuencialDAO inicializado para la ciudad: " + ciudadActual);
+        LOGGER.info("Usando archivos: " + archivoLineas + ", " + archivoFrecuencias);
     }
 
     @Override
@@ -85,7 +100,6 @@ public class LineaSecuencialDAO implements LineaDAO {
         Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
         try {
             inFile = new Scanner(new File("src/main/resources/" + archivoLineas));
-
             while (inFile.hasNextLine()) {
                 String line = inFile.nextLine();
                 Scanner readLine = new Scanner(line);
@@ -101,7 +115,6 @@ public class LineaSecuencialDAO implements LineaDAO {
                     Parada p = paradas.get(codParada);
                     if (p != null) linea.agregarParada(p);
                 }
-
                 map.put(codLinea, linea);
                 readLine.close();
             }
@@ -111,15 +124,18 @@ public class LineaSecuencialDAO implements LineaDAO {
             LOGGER.info("Frecuencias agregadas desde archivo: " + archivoFrecuencias);
 
         } catch (FileNotFoundException e) {
-            LOGGER.error("Archivo no encontrado: " + archivoLineas, e);
+            LOGGER.error("readFromFile: Archivo no encontrado: " + archivoLineas, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("Error en la estructura del archivo de líneas.", e);
-        } finally {
+            LOGGER.error("readFromFile: Error en la estructura del archivo de líneas.", e);
+        }
+        catch(Exception e){
+            LOGGER.error("readFromFile: Algo salio mal leyendo las lineas"+e.getMessage());
+        } 
+        finally {
             if (inFile != null)
                 inFile.close();
             LOGGER.info("Lectura de líneas finalizada.");
         }
-
         return map;
     }
 
@@ -135,17 +151,20 @@ public class LineaSecuencialDAO implements LineaDAO {
             while (inFile.hasNext()) {
                 String codLinea = inFile.next();
                 int dia = inFile.nextInt();
-                LocalTime hora = LocalTime.parse(inFile.next());
+                LocalTime hora = LocalTime.parse( inFile.next());
 
                 Linea l = lineas.get(codLinea);
                 if (l != null) {
                     l.agregarFrecuencia(dia, hora);
                 }
             }
-
         } catch (FileNotFoundException e) {
-            LOGGER.error("Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
-        } finally {
+            LOGGER.error("agregarFrecuencias: Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
+        }
+        catch(Exception e){
+            LOGGER.error("agregarFrecuencias: Algo salio mal leyendo las frecuencias"+e.getMessage());
+        } 
+        finally {
             if (inFile != null)
                 inFile.close();
         }
@@ -179,9 +198,9 @@ public class LineaSecuencialDAO implements LineaDAO {
             }
 
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error al crear archivo de líneas o frecuencias.", e);
+            LOGGER.error("writeToFile: Error al crear archivo de líneas o frecuencias.", e);
         } catch (FormatterClosedException e) {
-            LOGGER.error("Error al escribir en los archivos.", e);
+            LOGGER.error("writeToFile: Error al escribir en los archivos.", e);
         } finally {
             if (outLineas != null) outLineas.close();
             if (outFrecuencias != null) outFrecuencias.close();

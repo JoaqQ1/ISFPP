@@ -62,7 +62,7 @@ public class InterfazJavaFXImpl implements Interfaz {
             LOGGER.info("Interfaz JavaFX inicializada y mostrada.");
 
         } catch (Exception e) {
-            LOGGER.error("Error inicializando la interfaz JavaFX.", e);
+            LOGGER.error("inicializarLogicaUI: Error inicializando la interfaz JavaFX.", e);
             // Manejar la excepción adecuadamente
         }
     }

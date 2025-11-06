@@ -67,7 +67,7 @@ public class TramoBdDAO implements TramoDAO{
 			}
 			LOGGER.info("Tramos cargados desde base de datos.");
 		} catch (SQLException e) {
-			LOGGER.error("Error cargando tramos desde base de datos.", e);
+			LOGGER.error("leerBD: Error cargando tramos desde base de datos.", e);
 		}
 		
 		return tramosBd;

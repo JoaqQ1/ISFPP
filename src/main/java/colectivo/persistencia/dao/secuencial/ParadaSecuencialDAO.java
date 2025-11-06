@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Parada;
 import colectivo.persistencia.dao.ParadaDAO;
@@ -28,10 +29,22 @@ public class ParadaSecuencialDAO implements ParadaDAO {
 
 
     public ParadaSecuencialDAO() {
-        // Leemos el nombre del archivo desde el secuencial.properties
+        // 1. Obtener la configuración global
+        ConfiguracionGlobal config = ConfiguracionGlobal.getConfiguracionGlobal();
+
+        // 2. Obtener el código de la ciudad actual (ej: "CO")
+        String ciudadActual = config.getCiudadActual();
+        
+        // 3. Leemos el nombre del archivo desde el secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
-        name = rb.getString("parada");
-        LOGGER.info("ParadaSecuencialDAO inicializado con archivo: " + name);
+
+        // 4. Construir la clave dinámica
+        String claveParada = "parada." + ciudadActual; // Ej: "parada.CO"
+        
+        // 5. Obtener el nombre del archivo
+        name = rb.getString(claveParada);
+        
+        LOGGER.info("ParadaSecuencialDAO inicializado para la ciudad: " + ciudadActual + " con archivo: " + name);
     }
 
     public Map<Integer, Parada> buscarTodos() {
@@ -69,8 +82,8 @@ public class ParadaSecuencialDAO implements ParadaDAO {
         Map<Integer, Parada> map = new TreeMap<>();
         Scanner inFile = null;
         try {
+            
             inFile = new Scanner(new File("src/main/resources/" + file));
-           
             inFile.useDelimiter("\\s*;\\s*");
             
             while (inFile.hasNext()) {
@@ -83,12 +96,12 @@ public class ParadaSecuencialDAO implements ParadaDAO {
             }
             LOGGER.info("Paradas cargadas desde archivo: " + file);
         } catch (FileNotFoundException e) {
-            
-            LOGGER.error("Error opening file: " + file, e);
+
+            LOGGER.error("readFromFile: Error opening file: " + file, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("Error in file record structure", e);
+            LOGGER.error("readFromFile: Error in file record structure", e);
         } catch (IllegalStateException e) {
-            LOGGER.error("Error reading from file", e);
+            LOGGER.error("readFromFile: Error reading from file", e);
         } finally {
             if (inFile != null)
                 inFile.close();
@@ -109,9 +122,9 @@ public class ParadaSecuencialDAO implements ParadaDAO {
                         p.getLongitud());
             }
         } catch (FileNotFoundException e) {
-            LOGGER.error("Error creating file.", e);
+            LOGGER.error("writeToFile: Error creating file.", e);
         } catch (FormatterClosedException e) {
-            LOGGER.error("Error writing to file.", e);
+            LOGGER.error("writeToFile: Error writing to file.", e);
         } finally {
             if (outFile != null)
                 outFile.close();

@@ -58,7 +58,7 @@ public class ParadaBdDAO implements ParadaDAO{
 			}
 			LOGGER.info("Paradas cargadas desde base de datos.");
 		} catch (SQLException e) {
-			LOGGER.error("Error cargando paradas desde base de datos.", e);
+			LOGGER.error("leerBD: Error cargando paradas desde base de datos.", e);
 		}
 		return paradasBd;
 	}

@@ -33,7 +33,7 @@ public class AplicacionConsultas {
             LOGGER.info("Aplicación de consultas iniciada correctamente.");
 
         } catch (Exception e) {
-            LOGGER.error("Error al iniciar la aplicación de consultas: " + e.getMessage());
+            LOGGER.error("main: Error al iniciar la aplicación de consultas: " + e.getMessage());
             System.exit(1);
         }
     }
