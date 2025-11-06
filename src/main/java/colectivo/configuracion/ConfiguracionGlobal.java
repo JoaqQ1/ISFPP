@@ -19,7 +19,7 @@ public class ConfiguracionGlobal {
     private ResourceBundle resourceBundle;
     private Locale currentLocale;
 
-    public static ConfiguracionGlobal geConfiguracionGlobal(){
+    public static ConfiguracionGlobal getConfiguracionGlobal(){
         if (configuracion == null) {
 			configuracion = new ConfiguracionGlobal();
 		}
@@ -84,5 +84,9 @@ public class ConfiguracionGlobal {
     }
     public int getZoom() {
         return Integer.parseInt(propiedades.getProperty("zoom.inicial"));
+    }
+    
+    public String getCiudadActual() {
+        return propiedades.getProperty("ciudad.actual");
     }
 }

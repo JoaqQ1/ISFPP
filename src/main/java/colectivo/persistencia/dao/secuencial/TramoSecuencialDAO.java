@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Parada;
@@ -29,10 +30,22 @@ public class TramoSecuencialDAO implements TramoDAO {
     private boolean actualizar;
 
     public TramoSecuencialDAO() {
-        // Leemos el nombre del archivo desde secuencial.properties
+        // 1. Obtener la configuración global
+        ConfiguracionGlobal config = ConfiguracionGlobal.getConfiguracionGlobal();
+
+        // 2. Obtener el código de la ciudad actual (ej: "CO")
+        String ciudadActual = config.getCiudadActual();
+
+        // 3. Leemos el nombre del archivo desde secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
-        name = rb.getString("tramo");
-        LOGGER.info("TramoSecuencialDAO inicializado con archivo: " + name);
+        
+        // 4. Construir la clave dinámica
+        String claveTramo = "tramo." + ciudadActual; // Ej: "tramo.CO"
+
+        // 5. Obtener el nombre del archivo
+        name = rb.getString(claveTramo);
+
+        LOGGER.info("TramoSecuencialDAO inicializado para la ciudad: " + ciudadActual + " con archivo: " + name);
     }
 
     public Map<String, Tramo> buscarTodos() {

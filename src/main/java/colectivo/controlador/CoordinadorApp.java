@@ -150,7 +150,7 @@ public class CoordinadorApp {
     }
 
     public void inicializarAplicacion(){
-        config = ConfiguracionGlobal.geConfiguracionGlobal();
+        config = ConfiguracionGlobal.getConfiguracionGlobal();
 
         inicializarServicios();
         LOGGER.info("Se cargo la interfaz correctamente");
@@ -185,7 +185,7 @@ public class CoordinadorApp {
     }
     public void setIdioma(Locale locale) {
         if (config == null)
-            config = ConfiguracionGlobal.geConfiguracionGlobal();
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
         config.setLocale(locale);
     }
     /**
@@ -200,27 +200,27 @@ public class CoordinadorApp {
             throw new IllegalArgumentException("Tipo de persistencia no puede ser nulo o vacío");
         }
         if (config == null)
-            config = ConfiguracionGlobal.geConfiguracionGlobal();
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
         config.setPersistenciaTipo(tipoPersistencia);
     }
     public String getIdiomaActual() {
         if (config == null)
-            config = ConfiguracionGlobal.geConfiguracionGlobal();
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getIdiomaActual();
     }
     public double getOrigenLatitud() {
         if (config == null)
-            config = ConfiguracionGlobal.geConfiguracionGlobal();
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getOrigenLatitud();
     }
     public double getOrigenLongitud() {
         if (config == null)
-            config = ConfiguracionGlobal.geConfiguracionGlobal();
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getOrigenLongitud();
     }
     public int getZoom() {
         if (config == null)
-            config = ConfiguracionGlobal.geConfiguracionGlobal();
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getZoom();
     } 
 }

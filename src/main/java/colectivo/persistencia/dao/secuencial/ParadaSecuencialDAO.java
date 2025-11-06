@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Parada;
 import colectivo.persistencia.dao.ParadaDAO;
@@ -28,10 +29,22 @@ public class ParadaSecuencialDAO implements ParadaDAO {
 
 
     public ParadaSecuencialDAO() {
-        // Leemos el nombre del archivo desde el secuencial.properties
+        // 1. Obtener la configuración global
+        ConfiguracionGlobal config = ConfiguracionGlobal.getConfiguracionGlobal();
+
+        // 2. Obtener el código de la ciudad actual (ej: "CO")
+        String ciudadActual = config.getCiudadActual();
+        
+        // 3. Leemos el nombre del archivo desde el secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
-        name = rb.getString("parada");
-        LOGGER.info("ParadaSecuencialDAO inicializado con archivo: " + name);
+
+        // 4. Construir la clave dinámica
+        String claveParada = "parada." + ciudadActual; // Ej: "parada.CO"
+        
+        // 5. Obtener el nombre del archivo
+        name = rb.getString(claveParada);
+        
+        LOGGER.info("ParadaSecuencialDAO inicializado para la ciudad: " + ciudadActual + " con archivo: " + name);
     }
 
     public Map<Integer, Parada> buscarTodos() {

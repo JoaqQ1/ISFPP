@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
 import colectivo.modelo.Linea;
@@ -31,11 +32,25 @@ public class LineaSecuencialDAO implements LineaDAO {
     private boolean actualizar;
     
     public LineaSecuencialDAO() {
-        // Leemos los nombres de archivos desde secuencial.properties
+        // 1. Obtener la configuración global
+        ConfiguracionGlobal config = ConfiguracionGlobal.getConfiguracionGlobal();
+        
+        // 2. Obtener el código de la ciudad actual (ej: "CO")
+        String ciudadActual = config.getCiudadActual();
+        
+        // 3. Leemos los nombres de archivos desde secuencial.properties
         ResourceBundle rb = ResourceBundle.getBundle(Constantes.PATH_DATA_TXT);
-        archivoLineas = rb.getString("linea");
-        archivoFrecuencias = rb.getString("frecuencia");
-        LOGGER.info("LineaSecuencialDAO inicializado con archivos: " + archivoLineas + ", " + archivoFrecuencias);
+        
+        // 4. Construir las claves dinámicamente
+        String claveLinea = "linea." + ciudadActual;         // Ej: "linea.CO"
+        String claveFrecuencia = "frecuencia." + ciudadActual; // Ej: "frecuencia.CO"
+
+        // 5. Obtener los nombres de archivo usando las claves dinámicas
+        archivoLineas = rb.getString(claveLinea);
+        archivoFrecuencias = rb.getString(claveFrecuencia);
+        
+        LOGGER.info("LineaSecuencialDAO inicializado para la ciudad: " + ciudadActual);
+        LOGGER.info("Usando archivos: " + archivoLineas + ", " + archivoFrecuencias);
     }
 
     @Override
