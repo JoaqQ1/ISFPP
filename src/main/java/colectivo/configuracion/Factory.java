@@ -23,39 +23,17 @@ public class Factory {
             LOGGER.error("getInstancia: Parámetro nulo proporcionado: objName=null");
             throw new IllegalArgumentException("Parámetro nulo no permitido");
         }
-        // 1. Redirigir DAOs a los nuevos métodos (que ahora SÍ usan caché)
-        // if (Constantes.LINEA.equals(objName)) {
-        //     return getLineaDAO();
-        // }
-        // if (Constantes.PARADA.equals(objName)) {
-        //     return getParadaDAO();
-        // }
-        // if (Constantes.TRAMO.equals(objName)) {
-        //     return getTramoDAO();
-        // }
 
-        // 2. Lógica de caché para "INTERFAZ" y otros (usa el CACHÉ DE SERVICIOS)
         return SERVICE_CACHE.computeIfAbsent(objName, Factory::createServiceInstance);
     }
 
-    public static Object getInstancia(String objName, Class<?> type) {
+    public static <T> T getInstancia(String objName, Class<T> type) {
         if(objName == null || type == null) {
             LOGGER.error("getInstancia: Parámetros nulos proporcionados: objName=" + objName + ", type=" + type);
             throw new IllegalArgumentException("Parámetros nulos no permitidos");
         }
 
-        // 1. Redirigir DAOs
-        // if (Constantes.LINEA.equals(objName)) {
-        //     return getLineaDAO();
-        // }
-        // if (Constantes.PARADA.equals(objName)) {
-        //     return getParadaDAO();
-        // }
-        // if (Constantes.TRAMO.equals(objName)) {
-        //     return getTramoDAO();
-        // }
-
-        // 2. Lógica original de caché (thread-safe) para "INTERFAZ"
+        
         try {
             Object instance = SERVICE_CACHE.computeIfAbsent(objName, Factory::createServiceInstance);
             
@@ -67,7 +45,7 @@ public class Factory {
                 LOGGER.warn("getInstancia: La instancia cacheada para " + objName + " no es del tipo " + type.getName());
                 throw new RuntimeException("Instancia incompatible con el tipo: " + objName);
             }
-            return instance;
+            return type.cast(instance);
         } catch (Exception ex) {
             LOGGER.error("getInstancia: Error al obtener la instancia de: " + objName, ex);
             throw new RuntimeException(ex);
@@ -88,7 +66,7 @@ public class Factory {
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
                 | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
             LOGGER.error("createServiceInstance: Error al crear la instancia de: " + name, e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
 }

@@ -11,7 +11,7 @@ public class InterfazServiceImpl implements InterfazService{
     
     
     public InterfazServiceImpl() {
-        interfaz = (Interfaz) Factory.getInstancia(Constantes.INTERFAZ, Interfaz.class);
+        interfaz = (Interfaz) Factory.getInstancia(Constantes.INTERFAZ);
     }
 
     public void iniciar(){

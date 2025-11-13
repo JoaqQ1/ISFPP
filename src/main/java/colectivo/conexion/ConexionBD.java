@@ -16,15 +16,16 @@ public class ConexionBD {
 	// Nos conectamos a la base de datos (con los datos de conexión del archivo jdbc.properties)
 	public static Connection getConnection() {
 		try {
+			
 			if (con == null) {
 				Runtime.getRuntime().addShutdownHook(new MiShDwnHook());
                 ResourceBundle rb = ResourceBundle.getBundle("bd");
-
+				
                 String driver = rb.getString("driver");
                 String url = rb.getString("url");
-                String usr = rb.getString("usr");
-                String psw = rb.getString("psw");
-                String sch = rb.getString("sch");
+                String usr = rb.getString("usuario");
+                String psw = rb.getString("contraseña");
+                String sch = rb.getString("schema");
                 
                 Class.forName(driver);
                 con = DriverManager.getConnection(url, usr, psw);
