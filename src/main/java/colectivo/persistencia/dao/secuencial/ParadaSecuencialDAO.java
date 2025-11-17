@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.constantes.Constantes;
+import colectivo.excepciones.ConfiguracionException;
 import colectivo.modelo.Parada;
 import colectivo.persistencia.dao.ParadaDAO;
 import colectivo.util.Util;
@@ -56,26 +57,9 @@ public class ParadaSecuencialDAO implements ParadaDAO {
         return paradas;
     }
 
-    public void insertar(Parada parada) {
-        paradas.put(parada.getCodigo(), parada);
-        writeToFile(paradas, name);
-        actualizar = true;
-    }
-
-    public void actualizar(Parada parada) {
-        paradas.put(parada.getCodigo(), parada);
-        writeToFile(paradas, name);
-        actualizar = true;
-    }
-
-    public void borrar(Parada parada) {
-        paradas.remove(parada.getCodigo());
-        writeToFile(paradas, name);
-        actualizar = true;
-    }
 
     // ---------------------------------------------------
-    // Métodos auxiliares para leer y escribir en archivo
+    // Métodos auxiliares para leer
     // ---------------------------------------------------
 
     private Map<Integer, Parada> readFromFile(String file) {
@@ -95,39 +79,22 @@ public class ParadaSecuencialDAO implements ParadaDAO {
                 map.put(codParada, new Parada(codParada, direccion, latitud, longitud));
             }
             LOGGER.info("Paradas cargadas desde archivo: " + file);
+            return map;
         } catch (FileNotFoundException e) {
 
             LOGGER.error("readFromFile: Error opening file: " + file, e);
+            throw new ConfiguracionException("Error archivo de paradas no encontrado: "+file,e);
         } catch (NoSuchElementException e) {
             LOGGER.error("readFromFile: Error in file record structure", e);
+            throw new ConfiguracionException("Error en la estructura del archivo",e);
         } catch (IllegalStateException e) {
             LOGGER.error("readFromFile: Error reading from file", e);
+            throw new ConfiguracionException("Error al leer el archivo de paradas",e);
         } finally {
             if (inFile != null)
                 inFile.close();
         }
 
-        return map;
     }
 
-    private void writeToFile(Map<Integer, Parada> paradas, String file) {
-        Formatter outFile = null;
-        try {
-            outFile = new Formatter("src/main/resources/" + file);
-            for (Parada p : paradas.values()) {
-                outFile.format("%d;%s;%.6f;%.6f;%n",
-                        p.getCodigo(),
-                        p.getDireccion(),
-                        p.getLatitud(),
-                        p.getLongitud());
-            }
-        } catch (FileNotFoundException e) {
-            LOGGER.error("writeToFile: Error creating file.", e);
-        } catch (FormatterClosedException e) {
-            LOGGER.error("writeToFile: Error writing to file.", e);
-        } finally {
-            if (outFile != null)
-                outFile.close();
-        }
-    }
 }

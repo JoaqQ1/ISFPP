@@ -13,6 +13,8 @@ import java.util.TreeMap;
 import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
+import colectivo.excepciones.ConfiguracionException;
+import colectivo.excepciones.FactoryException;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Tramo;
 import colectivo.persistencia.dao.ParadaDAO;
@@ -57,26 +59,9 @@ public class TramoSecuencialDAO implements TramoDAO {
         return tramos;
     }
 
-    public void insertar(Tramo tramo) {
-        tramos.put(Util.claveTramo(tramo.getInicio(), tramo.getFin()), tramo);
-        writeToFile(tramos, name);
-        actualizar = true;
-    }
-
-    public void actualizar(Tramo tramo) {
-        tramos.put(Util.claveTramo(tramo.getInicio(), tramo.getFin()), tramo);
-        writeToFile(tramos, name);
-        actualizar = true;
-    }
-
-    public void borrar(Tramo tramo) {
-        tramos.remove(Util.claveTramo(tramo.getInicio(), tramo.getFin()));
-        writeToFile(tramos, name);
-        actualizar = true;
-    }
 
     // ---------------------------------------------------
-    // Métodos auxiliares para leer y escribir en archivo
+    // Métodos auxiliares para leer 
     // ---------------------------------------------------
 
     /**
@@ -88,9 +73,10 @@ public class TramoSecuencialDAO implements TramoDAO {
     private Map<String, Tramo> readFromFile(String file) {
         Map<String, Tramo> map = new TreeMap<>();
         Scanner inFile = null;
-        Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
-
         try {
+
+            Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
+
             inFile = new Scanner(new File("src/main/resources/" + file));
             inFile.useDelimiter("\\s*;\\s*");
 
@@ -107,45 +93,31 @@ public class TramoSecuencialDAO implements TramoDAO {
                 map.put(Util.claveTramo(inicio, fin), tramo);
             }
             LOGGER.info("Tramos cargados desde archivo: " + file);
+            return map;
         } catch (FileNotFoundException e) {
-            LOGGER.error("readFromFile: Error: archivo no encontrado -> " + file, e);
+            String errorMsg = "No se encontró el archivo de tramos: " + file;
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("readFromFile: Error en la estructura del archivo de tramos.", e);
-        } catch (IllegalStateException e) {
-            LOGGER.error("readFromFile: Error leyendo el archivo de tramos.", e);
+            String errorMsg = String.format(
+                "Error de formato en el archivo de tramos '%s'. Se esperaba una línea con formato 'int;int;int;int' (codInicio;codFin;tiempo;tipo).", file
+            );
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
+        } catch (FactoryException e) {
+            // Error si el DAO de Paradas falla al cargarse
+            String errorMsg = "Error de dependencia: No se pudo obtener ParadaDAO desde la Factory para leer los tramos.";
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
+        } catch (Exception e) {
+            String errorMsg = "Error inesperado al procesar el archivo de tramos '" + file + "'.";
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e); 
         } finally {
             if (inFile != null)
                 inFile.close();
         }
-
-        return map;
     }
 
-    /**
-     * Escribe todos los tramos al archivo especificado.
-     * 
-     * Formato guardado:
-     * codParadaInicio;codParadaFin;tiempo;tipo
-     */
-    private void writeToFile(Map<String, Tramo> tramos, String file) {
-        Formatter outFile = null;
-        try {
-            outFile = new Formatter("src/main/resources/" + file);
-            for (Tramo t : tramos.values()) {
-                outFile.format("%d;%d;%d;%d;%n",
-                        t.getInicio().getCodigo(),
-                        t.getFin().getCodigo(),
-                        t.getTiempo(),
-                        t.getTipo());
-            }
-        } catch (FileNotFoundException e) {
-            LOGGER.error("writeToFile: Error creando archivo de tramos.", e);
-        } catch (FormatterClosedException e) {
-            LOGGER.error("writeToFile: Error escribiendo archivo de tramos.", e);
-        } finally {
-            if (outFile != null)
-                outFile.close();
-        }
-    }
 
 }

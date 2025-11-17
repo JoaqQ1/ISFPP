@@ -8,6 +8,8 @@ import java.util.ResourceBundle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import colectivo.excepciones.ConexionException;
+
 public class ConexionBD {
 	private static final Logger LOGGER = LogManager.getLogger(ConexionBD.class.getName());
 
@@ -39,7 +41,7 @@ public class ConexionBD {
 			return con;
 		} catch (Exception ex) {
 			LOGGER.error("getConnection: Error al crear la conexion: " + ex.getMessage());
-			throw new RuntimeException("Error al crear la conexion", ex);
+			throw new ConexionException("Error al crear la conexion", ex);
 		}
 	}
 
@@ -53,7 +55,7 @@ public class ConexionBD {
 			} catch (Exception ex) {
 				LOGGER.error("MiShDwnHook.run: Error al cerrar la conexion: " + ex.getMessage());
 				ex.printStackTrace();
-				throw new RuntimeException(ex);
+				throw new ConexionException("Error al cerrar la conexion",ex);
 			}
 		}
 	}

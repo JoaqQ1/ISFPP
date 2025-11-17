@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import colectivo.conexion.ConexionBD;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
+import colectivo.excepciones.ConfiguracionException;
 import colectivo.modelo.*;
 import colectivo.persistencia.dao.LineaDAO;
 import colectivo.persistencia.dao.ParadaDAO;
@@ -107,8 +108,8 @@ public class LineaBdDAO implements LineaDAO{
 			return paradasMap;
 		} catch (SQLException e) {
 			LOGGER.error("cargarParadas: Error cargando paradas desde base de datos.", e);
+			throw new ConfiguracionException("Error de SQL al cargar paradas: " + e.getMessage(), e);
 		}
-		return null;
 	}
 	
 	private Map<String, Linea> cargarLineas(String queryLinea) {
@@ -124,10 +125,15 @@ public class LineaBdDAO implements LineaDAO{
 				lineasBd.put(codigo, lineaBd);
 			}
 			LOGGER.info("Lineas cargadas desde base de datos.");
+			return lineasBd;
 		} catch (SQLException e) {
-			LOGGER.error("cargarLineas: Error cargando lineas desde base de datos.", e);
+			String errorMsg = String.format(
+				"Error de SQL al cargar 'Líneas'. Verifique la conexión, la consulta ('%s') y que la tabla de líneas y sus columnas (ej. 'codigo', 'nombre') existan.",
+				queryLinea
+			);
+			LOGGER.error(errorMsg, e);
+			throw new ConfiguracionException(errorMsg, e);
 		}
-		return lineasBd;
 	}
 	
 	private Map<String, Map<Integer,List<LocalTime>>> cargarFrecuencias(String queryFrecuencias) {
@@ -148,9 +154,13 @@ public class LineaBdDAO implements LineaDAO{
 			LOGGER.info("Frecuencias cargadas desde base de datos.");
 			return frecuenciasMap;
 		} catch (SQLException e) {
-			LOGGER.error("cargarFrecuencias: Error cargando frecuencias desde base de datos.", e);
+			String errorMsg = String.format(
+				"Error de SQL al cargar 'Frecuencias'. Verifique la conexión, la consulta ('%s') y que la tabla de frecuencias y sus columnas (ej. 'linea', 'diasemana', 'hora') existan.",
+				queryFrecuencias
+			);
+			LOGGER.error(errorMsg, e);
+			throw new ConfiguracionException(errorMsg, e);
 		}
-		return null;
 	}
 	
 

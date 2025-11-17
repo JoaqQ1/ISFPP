@@ -17,6 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.configuracion.Factory;
 import colectivo.constantes.Constantes;
+import colectivo.excepciones.ConfiguracionException;
+import colectivo.excepciones.FactoryException;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.persistencia.dao.LineaDAO;
@@ -63,26 +65,9 @@ public class LineaSecuencialDAO implements LineaDAO {
         return lineas;
     }
 
-    public void insertar(Linea linea) {
-        lineas.put(linea.getCodigo(), linea);
-        writeToFile(lineas, archivoLineas, archivoFrecuencias);
-        actualizar = true;
-    }
-
-    public void actualizar(Linea linea) {
-        lineas.put(linea.getCodigo(), linea);
-        writeToFile(lineas, archivoLineas, archivoFrecuencias);
-        actualizar = true;
-    }
-
-    public void borrar(Linea linea) {
-        lineas.remove(linea.getCodigo());
-        writeToFile(lineas, archivoLineas, archivoFrecuencias);
-        actualizar = true;
-    }
 
     // ---------------------------------------------------
-    // Métodos auxiliares
+    // Métodos auxiliares para leer archivos
     // ---------------------------------------------------
 
     /**
@@ -97,8 +82,10 @@ public class LineaSecuencialDAO implements LineaDAO {
     private Map<String, Linea> readFromFile(String archivoLineas, String archivoFrecuencias) {
         Map<String, Linea> map = new TreeMap<>();
         Scanner inFile = null;
-        Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
         try {
+
+            Map<Integer,Parada> paradas = ((ParadaDAO)Factory.getInstancia(Constantes.PARADA, ParadaDAO.class)).buscarTodos();
+            
             inFile = new Scanner(new File("src/main/resources/" + archivoLineas));
             while (inFile.hasNextLine()) {
                 String line = inFile.nextLine();
@@ -122,21 +109,31 @@ public class LineaSecuencialDAO implements LineaDAO {
             // Agregamos frecuencias desde el segundo archivo
             agregarFrecuencias(archivoFrecuencias, map);
             LOGGER.info("Frecuencias agregadas desde archivo: " + archivoFrecuencias);
-
+            return map;
         } catch (FileNotFoundException e) {
-            LOGGER.error("readFromFile: Archivo no encontrado: " + archivoLineas, e);
+            String errorMsg = "No se encontró el archivo de líneas: " + archivoLineas;
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
         } catch (NoSuchElementException e) {
-            LOGGER.error("readFromFile: Error en la estructura del archivo de líneas.", e);
-        }
-        catch(Exception e){
-            LOGGER.error("readFromFile: Algo salio mal leyendo las lineas"+e.getMessage());
+            String errorMsg = "Error de formato en línea:" +   e.getMessage();
+            LOGGER.error(errorMsg,e);
+            throw new ConfiguracionException(errorMsg, e);
+
+        } catch(FactoryException e){
+            String errorMsg = "Error de dependencia: No se pudo obtener ParadaDAO desde la Factory para leer las líneas.";
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
+            
+        } catch(Exception e){
+            String errorMsg = "Error inesperado al procesar el archivo de líneas '" + archivoLineas + "'.";
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
         } 
         finally {
             if (inFile != null)
                 inFile.close();
             LOGGER.info("Lectura de líneas finalizada.");
         }
-        return map;
     }
 
     /**
@@ -159,51 +156,33 @@ public class LineaSecuencialDAO implements LineaDAO {
                 }
             }
         } catch (FileNotFoundException e) {
-            LOGGER.error("agregarFrecuencias: Archivo de frecuencias no encontrado: " + archivoFrecuencias, e);
+            String errorMsg = "No se encontró el archivo de frecuencias: " + archivoFrecuencias;
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
+        } catch(NoSuchElementException e){
+            String errorMsg = String.format(
+                "Error de formato en el archivo de frecuencias '%s'. Se esperaba una línea con formato 'string;int;HH:MM' (codLinea;dia;hora).", archivoFrecuencias
+            );
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
         }
-        catch(Exception e){
-            LOGGER.error("agregarFrecuencias: Algo salio mal leyendo las frecuencias"+e.getMessage());
-        } 
+        catch (java.time.format.DateTimeParseException e) {
+            String errorMsg = String.format(
+                "Error de formato de hora en el archivo de frecuencias '%s'. La hora no está en formato HH:MM (ej: 08:30). Error: %s", archivoFrecuencias, e.getMessage()
+            );
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
+
+        } catch (Exception e) {
+            String errorMsg = "Error inesperado al procesar el archivo de frecuencias '" + archivoFrecuencias + "'.";
+            LOGGER.error(errorMsg, e);
+            throw new ConfiguracionException(errorMsg, e);
+        }
         finally {
             if (inFile != null)
                 inFile.close();
         }
     }
 
-    /**
-     * Escribe las líneas y sus frecuencias a los archivos.
-     */
-    private void writeToFile(Map<String, Linea> lineas, String archivoLineas, String archivoFrecuencias) {
-        Formatter outLineas = null;
-        Formatter outFrecuencias = null;
-
-        try {
-            outLineas = new Formatter("src/main/resources/" + archivoLineas);
-            outFrecuencias = new Formatter("src/main/resources/" + archivoFrecuencias);
-
-            // Escribimos las líneas y paradas
-            for (Linea l : lineas.values()) {
-                outLineas.format("%s;%s", l.getCodigo(), l.getNombre());
-                for (Parada p : l.getParadas()) {
-                    outLineas.format(";%d", p.getCodigo());
-                }
-                outLineas.format("%n");
-
-                // Escribimos sus frecuencias
-                for(int i = 1; i<=7;i++){ // Del lunes al domingo
-                    for (LocalTime hora : l.getFrecuencias(i)) {
-                        outFrecuencias.format("%d;%s%n",i, hora);
-                    }
-                }
-            }
-
-        } catch (FileNotFoundException e) {
-            LOGGER.error("writeToFile: Error al crear archivo de líneas o frecuencias.", e);
-        } catch (FormatterClosedException e) {
-            LOGGER.error("writeToFile: Error al escribir en los archivos.", e);
-        } finally {
-            if (outLineas != null) outLineas.close();
-            if (outFrecuencias != null) outFrecuencias.close();
-        }
-    }
+    
 }

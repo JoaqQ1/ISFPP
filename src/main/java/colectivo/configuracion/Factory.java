@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import colectivo.excepciones.FactoryException;
+
 
 public class Factory {
     private static final Logger LOGGER = LogManager.getLogger(Factory.class.getName());
@@ -21,7 +23,7 @@ public class Factory {
     public static Object getInstancia(String objName) {
         if(objName == null) {
             LOGGER.error("getInstancia: Parámetro nulo proporcionado: objName=null");
-            throw new IllegalArgumentException("Parámetro nulo no permitido");
+            throw new FactoryException("Parámetro nulo no permitido");
         }
 
         return SERVICE_CACHE.computeIfAbsent(objName, Factory::createServiceInstance);
@@ -30,7 +32,7 @@ public class Factory {
     public static <T> T getInstancia(String objName, Class<T> type) {
         if(objName == null || type == null) {
             LOGGER.error("getInstancia: Parámetros nulos proporcionados: objName=" + objName + ", type=" + type);
-            throw new IllegalArgumentException("Parámetros nulos no permitidos");
+            throw new FactoryException("Parámetros nulos no permitidos");
         }
 
         
@@ -39,16 +41,16 @@ public class Factory {
             
             if (instance == null) {
                 LOGGER.error("getInstancia: computeIfAbsent devolvió null para: " + objName);
-                throw new RuntimeException("No se pudo crear la instancia para: " + objName);
+                throw new FactoryException("No se pudo crear la instancia para: " + objName);
             }
             if (!type.isAssignableFrom(instance.getClass())) {
                 LOGGER.warn("getInstancia: La instancia cacheada para " + objName + " no es del tipo " + type.getName());
-                throw new RuntimeException("Instancia incompatible con el tipo: " + objName);
+                throw new FactoryException("Instancia incompatible con el tipo: " + objName);
             }
             return type.cast(instance);
         } catch (Exception ex) {
             LOGGER.error("getInstancia: Error al obtener la instancia de: " + objName, ex);
-            throw new RuntimeException(ex);
+            throw new FactoryException("Error en el factory:",ex);
         }
     }
 
@@ -66,7 +68,7 @@ public class Factory {
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
                 | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
             LOGGER.error("createServiceInstance: Error al crear la instancia de: " + name, e);
-            throw new RuntimeException(e);
+            throw new FactoryException("Error al crear el objeto:",e);
         }
     }
 }

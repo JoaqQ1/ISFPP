@@ -1,7 +1,6 @@
 package colectivo.negocio;
 
 import java.util.Map;
-import java.util.Map.Entry;
 
 import colectivo.controlador.Coordinable;
 import colectivo.controlador.CoordinadorApp;
@@ -9,11 +8,8 @@ import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Tramo;
 import colectivo.servicio.LineaService;
-import colectivo.servicio.LineaServiceImpl;
 import colectivo.servicio.ParadaService;
-import colectivo.servicio.ParadaServiceImpl;
 import colectivo.servicio.TramoService;
-import colectivo.servicio.TramoServiceImpl;
 
 /**
  * Clase que representa el sistema de colectivos.
@@ -24,11 +20,6 @@ public class SistemaColectivo implements Coordinable{
 
     /** Instancia única del sistema (Singleton). */
     private static SistemaColectivo instancia = null;
-
-    /** Servicios para acceder a los datos de líneas, paradas y tramos. */
-    private LineaService lineaService;
-    private ParadaService paradaService;
-    private TramoService tramoService;
 
     /** Colecciones de datos cargados desde los servicios. */
     private Map<String, Linea> lineas;
@@ -41,17 +32,12 @@ public class SistemaColectivo implements Coordinable{
      * Constructor privado que inicializa los servicios y carga los datos.
      * Se utiliza únicamente dentro del método {@link #getInstancia()}.
      */
-    private SistemaColectivo() {
-        this.lineaService = new LineaServiceImpl();
-        this.paradaService = new ParadaServiceImpl();
-        this.tramoService = new TramoServiceImpl();
-
-        this.lineas = lineaService.buscarTodos();
-
-        this.paradas = paradaService.buscarTodos();
+    public SistemaColectivo(Map<String, Linea> lineas, Map<Integer, Parada> paradas, Map<String, Tramo> tramos) {
+        this.lineas = lineas;
+        this.paradas = paradas;
+        this.tramos = tramos;
         
-        this.tramos = tramoService.buscarTodos();
-
+        instancia = this;
     }
 
     /**
@@ -61,9 +47,6 @@ public class SistemaColectivo implements Coordinable{
      * @return instancia única de {@link SistemaColectivo}
      */
     public static SistemaColectivo getInstancia() {
-        if (instancia == null) {
-            instancia = new SistemaColectivo();
-        }
         return instancia;
     }
 

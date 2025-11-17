@@ -245,6 +245,7 @@ public class InterfazController implements Initializable, Coordinable {
     @FXML
     private void handleSalir(ActionEvent event) {
         // Limpieza correcta de recursos
+        LOGGER.info("Cerrando aplicación, apagando ExecutorService...");
         asyncService.shutdown();
         Platform.exit();
         System.exit(0);

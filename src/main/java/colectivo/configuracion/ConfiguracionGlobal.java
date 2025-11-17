@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import colectivo.conexion.ConexionBD;
+import colectivo.excepciones.ConfiguracionException;
 
 public class ConfiguracionGlobal {
     private static final Logger LOGGER = LogManager.getLogger(ConfiguracionGlobal.class.getName());
@@ -37,7 +38,10 @@ public class ConfiguracionGlobal {
             LOGGER.info("<init>: Configuración cargada correctamente.");
         } catch (IOException e) {
             LOGGER.error("<init>: Error cargando configuración", e);
-            throw new RuntimeException("Error cargando configuración", e);
+            throw new ConfiguracionException("Error cargando configuración", e);
+        } catch(Exception e){
+            LOGGER.error("<init>: Error cargando configuración", e);
+            throw new ConfiguracionException("Error cargando configuración", e);
         }
     }
 

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import colectivo.conexion.ConexionBD;
+import colectivo.excepciones.ConfiguracionException;
 import colectivo.modelo.Parada;
 import colectivo.persistencia.dao.ParadaDAO;
 
@@ -57,10 +58,15 @@ public class ParadaBdDAO implements ParadaDAO{
 				paradasBd.put(codigo, parada);
 			}
 			LOGGER.info("Paradas cargadas desde base de datos.");
+			return paradasBd;
 		} catch (SQLException e) {
-			LOGGER.error("leerBD: Error cargando paradas desde base de datos.", e);
+			String errorMsg = String.format(
+				"Error de SQL al cargar 'Paradas'. Verifique la conexión, la consulta ('%s') y que la tabla 'paradas' y sus columnas (codigo, direccion, latitud, longitud) existan.",
+				query
+			);
+			LOGGER.error(errorMsg, e);
+			throw new ConfiguracionException(errorMsg, e);
 		}
-		return paradasBd;
 	}
 
 }

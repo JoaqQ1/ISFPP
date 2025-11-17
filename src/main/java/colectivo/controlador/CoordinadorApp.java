@@ -12,6 +12,9 @@ import org.apache.logging.log4j.Logger;
 
 import colectivo.configuracion.ConfiguracionGlobal;
 import colectivo.constantes.Constantes;
+import colectivo.excepciones.AppException;
+import colectivo.excepciones.ConfiguracionException;
+import colectivo.excepciones.FactoryException;
 import colectivo.modelo.Linea;
 import colectivo.modelo.Parada;
 import colectivo.modelo.Recorrido;
@@ -20,6 +23,12 @@ import colectivo.negocio.Calculo;
 import colectivo.negocio.SistemaColectivo;
 import colectivo.servicio.InterfazService;
 import colectivo.servicio.InterfazServiceImpl;
+import colectivo.servicio.LineaService;
+import colectivo.servicio.LineaServiceImpl;
+import colectivo.servicio.ParadaService;
+import colectivo.servicio.ParadaServiceImpl;
+import colectivo.servicio.TramoService;
+import colectivo.servicio.TramoServiceImpl;
 
 /**
  * Coordinador actúa como intermediario entre la interfaz de usuario y la lógica del sistema de colectivos.
@@ -42,6 +51,15 @@ public class CoordinadorApp implements ICoordinador{
 
     private Map<String, Object> datos;
     
+    /** Servicios para acceder a los datos de líneas, paradas y tramos. */
+    private LineaService lineaService;
+    private ParadaService paradaService;
+    private TramoService tramoService;
+    
+    /** Colecciones de datos cargados desde los servicios. */
+    private Map<String, Linea> lineas;
+    private Map<Integer, Parada> paradas;
+    private Map<String, Tramo> tramos;
     /**
      * Obtiene la instancia del sistema de colectivos.
      * @return el SistemaColectivo asociado
@@ -57,7 +75,7 @@ public class CoordinadorApp implements ICoordinador{
     public void setSistema(SistemaColectivo sistema) {
         if(sistema == null) {
             LOGGER.error("setSistema: El sistema no puede ser nulo");
-            throw new IllegalArgumentException("El sistema no puede ser nulo");
+            throw new AppException("El sistema no puede ser nulo");
         }
         this.sistema = sistema;
         this.sistema.setCoordinador(this);
@@ -78,7 +96,7 @@ public class CoordinadorApp implements ICoordinador{
     public void setCalculo(Calculo calculo) {
         if(calculo == null) {
             LOGGER.error("setCalculo: El objeto de cálculo no puede ser nulo");
-            throw new IllegalArgumentException("El objeto de cálculo no puede ser nulo");
+            throw new AppException("El objeto de cálculo no puede ser nulo");
         }
         this.calculo = calculo;
     }
@@ -98,7 +116,7 @@ public class CoordinadorApp implements ICoordinador{
     public void setInterfaz(InterfazService interfaz) {
         if(interfaz == null) {
             LOGGER.error("setInterfaz: La interfaz no puede ser nula");
-            throw new IllegalArgumentException("La interfaz no puede ser nula");
+            throw new AppException("La interfaz no puede ser nula");
         }
         this.interfaz = interfaz;
         this.interfaz.setCoordinador(this);
@@ -132,15 +150,15 @@ public class CoordinadorApp implements ICoordinador{
     public List<List<Recorrido>> calcularRecorrido(Parada origen, Parada destino, int dia, LocalTime hora) {
         if(origen == null || destino == null) {
             LOGGER.error("calcularRecorrido: Parada de origen o destino es nula");
-            throw new IllegalArgumentException("Parada de origen y destino no pueden ser nulas");
+            throw new AppException("Parada de origen y destino no pueden ser nulas");
         }
         if(dia < 0 || dia > 6) {
             LOGGER.error("calcularRecorrido: Día inválido proporcionado: " + dia);
-            throw new IllegalArgumentException("Día debe estar entre 0 (Domingo) y 6 (Sábado)");
+            throw new AppException("Día debe estar entre 0 (Domingo) y 6 (Sábado)");
         }
         if(hora == null) {
             LOGGER.error("calcularRecorrido: Hora proporcionada es nula");
-            throw new IllegalArgumentException("Hora no puede ser nula");
+            throw new AppException("Hora no puede ser nula");
         }
         // Aquí delega al servicio de cálculo
         return calculo.calcularRecorrido(origen, destino, dia, hora, (Map<String,Tramo>)datos.get(Constantes.TRAMO));
@@ -150,7 +168,14 @@ public class CoordinadorApp implements ICoordinador{
     }
 
     public void inicializarAplicacion(){
-        config = ConfiguracionGlobal.getConfiguracionGlobal();
+        try{
+            config = ConfiguracionGlobal.getConfiguracionGlobal();
+        }
+        catch(ConfiguracionException e){
+            
+            LOGGER.error("Fallo al inciar la app: ",e.getMessage());
+            throw new AppException("No se pudo obtener la configuracion.",e);
+        }
 
         inicializarServicios();
         LOGGER.info("Se cargo la interfaz correctamente");
@@ -162,7 +187,26 @@ public class CoordinadorApp implements ICoordinador{
     }
 
     private void inicializarServicios(){
-        sistema = SistemaColectivo.getInstancia();
+        try{
+            lineaService = new LineaServiceImpl();
+            paradaService = new ParadaServiceImpl();
+            tramoService = new TramoServiceImpl();
+            lineas = lineaService.buscarTodos();
+            paradas = paradaService.buscarTodos();
+            tramos = tramoService.buscarTodos();
+            LOGGER.info("Servicios inciados corectamente");
+
+        } catch(FactoryException e){
+            LOGGER.fatal("Error crítico de al incializa los servicios de lectura de datos. La aplicación no puede iniciar.", e);
+            throw new AppException("Error critico al inicializar los servicios de lectura de datos.",e);
+        } catch(ConfiguracionException e){
+            String errorMsg = "Error crítico al cargar los datos ";
+            LOGGER.fatal(errorMsg + " Causa original: " + e.getMessage(), e);
+            throw new AppException(errorMsg + " Detalles: " + e.getMessage(), e);
+        }
+
+		sistema = new SistemaColectivo(lineas, paradas, tramos);
+		sistema.setCoordinador(this);
     }
 
     private void cargarDatos(){
@@ -175,7 +219,14 @@ public class CoordinadorApp implements ICoordinador{
         calculo = new Calculo(datos);
     }
     private void inicializarInterfazUsuario(){
-        interfaz = new InterfazServiceImpl();
+        try{
+            interfaz = new InterfazServiceImpl();
+            LOGGER.info("Interfaz creada correctamente");
+        }catch(FactoryException e){
+            String mensajeError = "Error crítico al inicializar los servicios de interfaz. La aplicación no puede iniciar.";
+            LOGGER.fatal(mensajeError, e);
+            throw new AppException(mensajeError, e);
+        }
         interfaz.setCoordinador(this);
         interfaz.iniciar();
     }
@@ -184,43 +235,20 @@ public class CoordinadorApp implements ICoordinador{
         return config.getResourceBundle();
     }
     public void setIdioma(Locale locale) {
-        if (config == null)
-            config = ConfiguracionGlobal.getConfiguracionGlobal();
+        if(locale == null ) throw new AppException("El idioma no puede ser nulo"+locale);
         config.setLocale(locale);
     }
-    /**
-     * Cambia la fuente de datos (ej. "TXT" a "BD") y recarga todo el sistema.
-     * Este método es llamado por la InterfazController.
-     *
-     * @param tipoPersistencia El nuevo tipo (ej. "TXT" o "BD")
-     */
-    public void cambiarFuenteDeDatos(String tipoPersistencia) {
-        if(tipoPersistencia == null || tipoPersistencia.isEmpty()) {
-            LOGGER.error("cambiarFuenteDeDatos: Tipo de persistencia no puede ser nulo o vacío");
-            throw new IllegalArgumentException("Tipo de persistencia no puede ser nulo o vacío");
-        }
-        if (config == null)
-            config = ConfiguracionGlobal.getConfiguracionGlobal();
-        config.setPersistenciaTipo(tipoPersistencia);
-    }
+    
     public String getIdiomaActual() {
-        if (config == null)
-            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getIdiomaActual();
     }
     public double getOrigenLatitud() {
-        if (config == null)
-            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getOrigenLatitud();
     }
     public double getOrigenLongitud() {
-        if (config == null)
-            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getOrigenLongitud();
     }
     public int getZoom() {
-        if (config == null)
-            config = ConfiguracionGlobal.getConfiguracionGlobal();
         return config.getZoom();
     } 
 }
