@@ -2,6 +2,7 @@ package colectivo.ui.impl.javafx;
 
 import colectivo.controlador.CoordinadorApp;
 import colectivo.ui.Interfaz;
+import colectivo.ui.impl.javafx.controllers.InterfazController;
 
 import java.util.ResourceBundle; // Importaciones necesarias
 import javafx.fxml.FXMLLoader;
@@ -35,10 +36,10 @@ public class InterfazJavaFXImpl implements Interfaz {
             // 1. Cargar el ResourceBundle (i18n)
             // Usamos 'this.coordinador', que fue inyectado por el CoordinadorApp
             ResourceBundle rb = this.coordinador.getResourceBundle();
-
+            
             // 2. Crear el FXMLLoader
             FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("views/mainscene.fxml"), rb);
-        
+            
             // 3. Cargar la escena
             Scene scene = new Scene(loader.load());
             
@@ -46,14 +47,16 @@ public class InterfazJavaFXImpl implements Interfaz {
             scene.getStylesheets().add(getClass().getResource("/views/styles/estilos.css").toExternalForm());
             
             // 5. Obtener el controlador creado por el FXMLLoader
+            
             InterfazController controller = loader.getController();
             
             // 6. Inyectar dependencias en el controlador
             // Usamos 'this.coordinador' (la instancia original)
+
             controller.setCoordinador(this.coordinador);
             
             // 7. Cargar datos iniciales
-            controller.cargarInterfaz();
+            // controller.cargarInterfaz();
 
             // 8. Configurar y mostrar la ventana principal
             primaryStage.setScene(scene);

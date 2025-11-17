@@ -11,7 +11,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/24.0.1"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="colectivo.ui.impl.javafx.InterfazController"
+            fx:controller="colectivo.ui.impl.javafx.controllers.InterfazController"
             prefWidth="1140.0" prefHeight="921.0">
 
    <fx:define>

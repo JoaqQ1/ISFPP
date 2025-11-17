@@ -25,7 +25,7 @@ import colectivo.servicio.InterfazServiceImpl;
  * Coordinador actúa como intermediario entre la interfaz de usuario y la lógica del sistema de colectivos.
  * Permite acceder a las entidades del sistema como líneas, paradas y tramos, así como a los cálculos asociados.
  */
-public class CoordinadorApp {
+public class CoordinadorApp implements ICoordinador{
 
     private static final Logger LOGGER = LogManager.getLogger(CoordinadorApp.class.getName());
 
