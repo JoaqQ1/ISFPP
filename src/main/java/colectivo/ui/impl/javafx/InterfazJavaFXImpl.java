@@ -4,69 +4,102 @@ import colectivo.controlador.CoordinadorApp;
 import colectivo.ui.Interfaz;
 import colectivo.ui.impl.javafx.controllers.InterfazController;
 
-import java.util.ResourceBundle; // Importaciones necesarias
+import java.util.ResourceBundle;
+
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.Parent;
 import javafx.stage.Stage;
 
 import org.apache.logging.log4j.*;
+
+/**
+ * Implementación Concreta de la UI (Vista).
+ * NO extiende de Application. Sigue las directrices de la cátedra.
+ */
 public class InterfazJavaFXImpl implements Interfaz {
 
     private static final Logger LOGGER = LogManager.getLogger(InterfazJavaFXImpl.class.getName());
+    
+    // --- Dependencias Inyectadas ---
     private CoordinadorApp coordinador;
+    private Stage primaryStage; // El Stage principal, inyectado por el Launcher
+    private InterfazController controller; // El controlador FXML
 
     @Override
     public void setCoordinador(CoordinadorApp coordinador) {
         this.coordinador = coordinador;
     }
 
+    /**
+     * Punto de entrada llamado por el CoordinadorApp.
+     * Delega el lanzamiento al Launcher estático.
+     */
     @Override
     public void iniciar() {
-        // Ahora pasamos 'this' (esta misma instancia) al launcher
+        LOGGER.info("Iniciando UI (Instancia: {})...", this.hashCode());
+        // Llama al Launcher estático pasando esta misma instancia (el puente)
         InterfazGrafica.launchApp(coordinador, this, new String[]{});
-        LOGGER.info("Interfaz JavaFX iniciada.");
+    }
+
+    // --- CICLO DE VIDA (Orquestado por InterfazGrafica.start()) ---
+
+    /**
+     * Paso 1: Recibe el Stage desde el Launcher (Inyección).
+     */
+    public void setPrimaryStage(Stage primaryStage) {
+        this.primaryStage = primaryStage;
     }
 
     /**
-     * NUEVO MÉTODO: Esta es la lógica que antes estaba en InterfazGrafica.start().
-     * El launcher llamará a este método desde su 'start()'.
+     * Paso 2: Prepara la UI (Carga FXML, CSS, Controladores).
+     * Esta es la lógica principal de tu antiguo método 'inicializarLogicaUI'.
      */
-    public void inicializarLogicaUI(Stage primaryStage) {
+    public void inicializarUI() {
+        // 3. Manejo básico de errores
         try {
-            // 1. Cargar el ResourceBundle (i18n)
-            // Usamos 'this.coordinador', que fue inyectado por el CoordinadorApp
-            ResourceBundle rb = this.coordinador.getResourceBundle();
+            if (coordinador == null) {
+                LOGGER.fatal("Error: El coordinador es nulo. La UI no puede inicializarse.");
+                throw new IllegalStateException("Coordinador no inyectado.");
+            }
             
-            // 2. Crear el FXMLLoader
+            LOGGER.info("Cargando ResourceBundle y FXML...");
+            ResourceBundle rb = this.coordinador.getResourceBundle();
             FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("views/mainscene.fxml"), rb);
             
-            // 3. Cargar la escena
-            Scene scene = new Scene(loader.load());
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
             
-            // 4. Cargar la hoja de estilos CSS
             scene.getStylesheets().add(getClass().getResource("/views/styles/estilos.css").toExternalForm());
             
-            // 5. Obtener el controlador creado por el FXMLLoader
+            // Guardamos el controlador para inyectarle dependencias
+            this.controller = loader.getController();
             
-            InterfazController controller = loader.getController();
+            // Inyectamos el coordinador en el InterfazController (FXML)
+            this.controller.setCoordinador(this.coordinador);
             
-            // 6. Inyectar dependencias en el controlador
-            // Usamos 'this.coordinador' (la instancia original)
-
-            controller.setCoordinador(this.coordinador);
-            
-            // 7. Cargar datos iniciales
-            // controller.cargarInterfaz();
-
-            // 8. Configurar y mostrar la ventana principal
             primaryStage.setScene(scene);
             primaryStage.setTitle(rb.getString("app.title"));
-            primaryStage.show();
-            LOGGER.info("Interfaz JavaFX inicializada y mostrada.");
 
         } catch (Exception e) {
-            LOGGER.error("inicializarLogicaUI: Error inicializando la interfaz JavaFX.", e);
-            // Manejar la excepción adecuadamente
+            LOGGER.error("inicializarUI: Error fatal inicializando la interfaz.", e);
+            // Si falla la carga del FXML, la app no puede continuar.
+            // (Aquí podrías mostrar una alerta nativa si quisieras)
+            Platform.exit();
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Paso 3: Muestra la vista al usuario.
+     */
+    public void mostrarVistaPrincipal() {
+        if (primaryStage != null) {
+            primaryStage.show();
+            LOGGER.info("Vista principal mostrada.");
+        } else {
+            LOGGER.error("mostrarVistaPrincipal: Stage es nulo. No se puede mostrar la vista.");
         }
     }
 }
